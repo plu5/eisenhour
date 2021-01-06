@@ -1,0 +1,22 @@
+{
+  "name": "eisenhour",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "concurrently \"npm run server\" \"npm run client\"",
+    "server": "node server.js",
+    "client": "node start-client.js"
+  },
+  "devDependencies": {
+    "concurrently": "^5.3.0"
+  },
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^2.3.0"
+  },
+  "jest": {
+    "testPathIgnorePatterns": [
+      "<rootDir>/client/"
+    ]
+  }
+}
