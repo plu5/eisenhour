@@ -14,9 +14,9 @@ const io = module.exports.io = require('socket.io')(server);
 io.on('connection', function(socket) {
   console.log('a user connected');
   // Load client secrets from a local file.
-  fs.readFile('credentials.json', (err, content) => {
-    if (err) return console.log('Error loading client secret file:', err);
-    // Pass on to client
-    io.emit('credentials', JSON.parse(content).web);
-  });
+  // fs.readFile('credentials.json', (err, content) => {
+  //   if (err) return console.log('Error loading client secret file:', err);
+  //   // Pass on to client
+  //   io.emit('credentials', JSON.parse(content).web);
+  // });
 });
