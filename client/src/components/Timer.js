@@ -164,17 +164,21 @@ function Timer(props) {
       }
       {/* elapsed & start/stop */}
       <div className="time-section">
-        <span className={'timer-elapsed' +
-                         (isRunning ? ' running' : '')}>
-          {elapsed}
-        </span>
-        {isRunning ?
-         <button onClick={stop}>
-           ⏹ stop
-         </button> :
-         <button onClick={start}>
-           ▶ start
-         </button>
+        {isEditing ? <></> :
+         <>
+           <span className={'timer-elapsed' +
+                            (isRunning ? ' running' : '')}>
+             {elapsed}
+           </span>
+           {isRunning ?
+            <button onClick={stop}>
+              ⏹ stop
+            </button> :
+            <button onClick={start}>
+              ▶ start
+            </button>
+           }
+         </>
         }
         <br/>
         {/* startTime */}
