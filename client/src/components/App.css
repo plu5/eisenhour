@@ -12,7 +12,52 @@ form, table {
 
 body
 {
-    font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif;
-    color: white;
-    background: #2c3e50;
+  font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif;
+  background: #CDCDC1;
+}
+
+.timeline {
+  /*width: calc((100% / 4) * 3);*/
+  width: 30em;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.timer {
+  border-top: outset;
+  padding: 5px;
+}
+
+.timer:nth-child(even) {
+  background-color: #C6C6B9;
+}
+
+.time-section {
+  float: right;
+}
+
+.timer-title {
+  background: none;
+  border: none;
+  font-size: 1.2em;
+}
+
+.timer-description {
+  background: none;
+  border: none;
+  color: #6a6a6a;
+}
+
+.start-time, .end-time {
+  background: none;
+  border: none;
+}
+
+.timer-elapsed {
+  padding: 2px;
+  font-weight: bold;
+}
+
+.running {
+  color: green;
 }
