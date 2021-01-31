@@ -14,6 +14,8 @@ function Timer(props) {
     props.endTime ?
       calculateElapsed(props.startTime, props.endTime) :
       '0:00:00');
+  const [title, setTitle] = useState(props.title || '');
+  const [description, setDescription] = useState(props.description || '');
 
   const [isEditing, setIsEditing] = useState(false);
   const [startTimeDisplayValue, setStartTimeDisplayValue] = useState(
@@ -22,10 +24,11 @@ function Timer(props) {
   const [endTimeDisplayValue, setEndTimeDisplayValue] = useState(
     props.endTime ?
       props.endTime.toLocaleTimeString('en-GB').substring(0, 5) : '');
-  const [startTimeEditValue, setStartTimeEditValue] =
-        useState(startTimeDisplayValue);
-  const [endTimeEditValue, setEndTimeEditValue] =
-        useState(endTimeDisplayValue);
+  const [editValues, setEditValues] = useState({
+    startTime: startTimeDisplayValue,
+    endTime: endTimeDisplayValue,
+    title: title,
+    description: description});
 
   /**
    * Start timer, saving start time
@@ -34,7 +37,8 @@ function Timer(props) {
     const now = new Date();
     setStartTime(now);
     setStartTimeDisplayValue(now.toLocaleTimeString('en-GB').substring(0, 5));
-    setStartTimeEditValue(now.toLocaleTimeString('en-GB').substring(0, 5));
+    setEditValues({...editValues,
+                   startTime: now.toLocaleTimeString('en-GB').substring(0, 5)});
     setIsRunning(true);
   }
 
@@ -45,7 +49,8 @@ function Timer(props) {
     const now = new Date();
     setEndTime(now);
     setEndTimeDisplayValue(now.toLocaleTimeString('en-GB').substring(0, 5));
-    setEndTimeEditValue(now.toLocaleTimeString('en-GB').substring(0, 5));
+    setEditValues({...editValues,
+                   endTime: now.toLocaleTimeString('en-GB').substring(0, 5)});
     setIsRunning(false);
   }
 
@@ -81,30 +86,23 @@ function Timer(props) {
     return () => clearInterval(tickFunctionId);
   }, [isRunning, startTime, elapsed]);
 
+  // Update data on server when the times, title, or description change
   useEffect(() => {
     fetch('timerUpdate', {
       method: 'post',
-      body: JSON.stringify({...props, startTime, endTime}),
+      body: JSON.stringify({...props, startTime, endTime, title, description}),
       headers: {'Content-Type': 'application/json'},
     })
       .then((res) => res.json())
       .then((json) => console.log(json));
-  }, [props, startTime, endTime]);
+  }, [props, startTime, endTime, title, description]);
 
   /**
-   * onChange function for startTimeEditValue to keep in sync with DOM
+   * onChange function for edit values to keep in sync with DOM
    * @param {event} event
    */
-  function handleStartTimeEditChange(event) {
-    setStartTimeEditValue(event.target.value);
-  }
-
-  /**
-   * onChange function for endTimeEditValue to keep in sync with DOM
-   * @param {event} event
-   */
-  function handleEndTimeEditChange(event) {
-    setEndTimeEditValue(event.target.value);
+  function handleEditValuesChange(event) {
+    setEditValues({...editValues, [event.target.name]: event.target.value});
   }
 
   /**
@@ -115,7 +113,7 @@ function Timer(props) {
   function handleSubmit(event) {
     event.preventDefault();
 
-    const [startHours, startMinutes] = startTimeEditValue.split(':');
+    const [startHours, startMinutes] = editValues.startTime.split(':');
     // Have to clone the Date object before mutating it, otherwise the
     //  useEffect hook won’t be called when we set the state
     const newStartTime = new Date(startTime.valueOf());
@@ -123,31 +121,48 @@ function Timer(props) {
     newStartTime.setMinutes(startMinutes);
     setStartTime(newStartTime);
 
-    const [endHours, endMinutes] = endTimeEditValue.split(':');
+    const [endHours, endMinutes] = editValues.endTime.split(':');
     const newEndTime = new Date(endTime.valueOf());
     newEndTime.setHours(endHours);
     newEndTime.setMinutes(endMinutes);
     setEndTime(newEndTime);
 
-    setStartTimeDisplayValue(startTimeEditValue);
-    setEndTimeDisplayValue(endTimeEditValue);
+    setStartTimeDisplayValue(editValues.startTime);
+    setEndTimeDisplayValue(editValues.endTime);
 
-    setElapsed(calculateElapsed(startTime, endTime));
+    setElapsed(calculateElapsed(newStartTime, newEndTime));
+
+    setTitle(editValues.title);
+    setDescription(editValues.description);
+
     setIsEditing(false);
   }
 
   /**
-   * When user cancels editing
+   * When user cancels editing, revert to old values
    */
   function handleCancel() {
-    setStartTimeEditValue(startTimeDisplayValue);
-    setEndTimeEditValue(endTimeDisplayValue);
+    setEditValues({...editValues, startTime: startTimeDisplayValue,
+                   endTime: endTimeDisplayValue, title, description});
     setIsEditing(false);
   }
 
   return (
     <div className="timer">
-      <button className="timer-title">{props.title}</button>
+      {/* title */}
+      {isEditing ?
+       <form onSubmit={handleSubmit}>
+         <input name="title" value={editValues.title}
+                onChange={handleEditValuesChange}
+                style={{width: editValues.title.length + 'ch'}}/>
+         <button type="submit" style={{display: 'none'}}/>
+       </form> :
+       <button className="timer-title"
+               onClick={() => setIsEditing(true)}>
+         {title}
+       </button>
+      }
+      {/* elapsed & start/stop */}
       <div className="time-section">
         <span className={'timer-elapsed' +
                          (isRunning ? ' running' : '')}>
@@ -162,11 +177,12 @@ function Timer(props) {
          </button>
         }
         <br/>
+        {/* startTime */}
         {isEditing ?
          <form onSubmit={handleSubmit} autoComplete="off">
-           <input value={startTimeEditValue}
-                  onChange={handleStartTimeEditChange}
-                  style={{width: startTimeEditValue.length + 'ch'}}/>
+           <input name="startTime" value={editValues.startTime}
+                  onChange={handleEditValuesChange}
+                  style={{width: editValues.startTime.length + 'ch'}}/>
            <button type="submit" style={{display: 'none'}}/>
          </form> :
          startTime &&
@@ -175,12 +191,14 @@ function Timer(props) {
            {startTimeDisplayValue}
          </button>
         }
+        {/* separator */}
         {startTime ? <>-</> : <></>}
+        {/* endTime */}
         {isEditing ?
          <form onSubmit={handleSubmit} autoComplete="off">
-           <input value={endTimeEditValue}
-                  onChange={handleEndTimeEditChange}
-                  style={{width: endTimeEditValue.length + 'ch'}}/>
+           <input name="endTime" value={editValues.endTime}
+                  onChange={handleEditValuesChange}
+                  style={{width: editValues.endTime.length + 'ch'}}/>
            <button type="submit" style={{display: 'none'}}/>
          </form> :
          endTime &&
@@ -189,6 +207,7 @@ function Timer(props) {
            {endTimeDisplayValue}
          </button>
         }
+        {/* edit confirm and cancel buttons */}
         {isEditing ?
          <>
            <button onClick={handleSubmit}>v</button>
@@ -196,7 +215,19 @@ function Timer(props) {
          </> : <></>}
       </div>
       <br/>
-      <button className="timer-description">{props.description}</button>
+      {/* description */}
+      {isEditing ?
+       <form onSubmit={handleSubmit}>
+         <input name="description" value={editValues.description}
+                onChange={handleEditValuesChange}
+                style={{width: editValues.title.length + 'ch'}}/>
+         <button type="submit" style={{display: 'none'}}/>
+       </form> :
+       <button className="timer-description"
+               onClick={() => setIsEditing(true)}>
+         {description}
+       </button>
+      }
     </div>
   );
 }
