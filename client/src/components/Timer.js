@@ -120,17 +120,20 @@ function Timer(props) {
     newStartTime.setHours(startHours);
     newStartTime.setMinutes(startMinutes);
     setStartTime(newStartTime);
-
-    const [endHours, endMinutes] = editValues.endTime.split(':');
-    const newEndTime = new Date(endTime.valueOf());
-    newEndTime.setHours(endHours);
-    newEndTime.setMinutes(endMinutes);
-    setEndTime(newEndTime);
-
     setStartTimeDisplayValue(editValues.startTime);
-    setEndTimeDisplayValue(editValues.endTime);
 
-    setElapsed(calculateElapsed(newStartTime, newEndTime));
+    if (endTime) {
+      const [endHours, endMinutes] = editValues.endTime.split(':');
+      const newEndTime = new Date(endTime.valueOf());
+      newEndTime.setHours(endHours);
+      newEndTime.setMinutes(endMinutes);
+      setEndTime(newEndTime);
+      setEndTimeDisplayValue(editValues.endTime);
+
+      setElapsed(calculateElapsed(newStartTime, newEndTime));
+    } else {
+      setElapsed(calculateElapsed(newStartTime, new Date()));
+    }
 
     setTitle(editValues.title);
     setDescription(editValues.description);
