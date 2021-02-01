@@ -74,6 +74,7 @@ function Timer(props) {
     return hours + ':' + minutes + ':' + seconds;
   }
 
+  // Tick elapsed every second while running
   useEffect(() => {
     let tickFunctionId = null;
     if (isRunning) {

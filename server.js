@@ -2,12 +2,16 @@ const fs = require('fs');
 const express = require('express');
 const bodyParser = require('body-parser');
 
-let timerData = [{id: 0, title: 'test title one', description: 'description 1',
-                  startTime: new Date(), endTime: new Date()},
-                 {id: 1, title: 'test title two', description: 'description 2',
-                  startTime: new Date(), endTime: new Date()},
-                 {id: 2, title: 'timer that hasn’t started'},
-                 {id: 3, title: 'timer in progress', startTime: new Date()}];
+let timerData = [];
+let save = null;
+const saveFilePath = 'save.json';
+
+// Load save
+fs.readFile(saveFilePath, (err, content) => {
+  if (err) return console.log('Error loading save:', err);
+  save = JSON.parse(content);
+  timerData = save.y2021.m1.d1;
+});
 
 // Set up express and io
 const app = module.exports.app = express();
@@ -41,4 +45,10 @@ app.post('/timerUpdate', (req, res) => {
   timerData[timerIndex] = {...req.body};
   res.send(timerData[timerIndex]);
   console.log(timerData[timerIndex]);
+
+  // Save save
+  fs.writeFile(saveFilePath, JSON.stringify(save, null, 2),
+               function writeJSON(err) {
+                 if (err) return console.log('Error saving save:', err);
+               });
 });
