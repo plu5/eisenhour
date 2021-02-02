@@ -1,5 +1,6 @@
 const fs = require('fs');
 const express = require('express');
+const nanoid = require('nanoid').nanoid;
 const bodyParser = require('body-parser');
 
 let timerData = [];
@@ -35,20 +36,28 @@ app.get('/timerData', (req, res) => {
   res.send(timerData);
 });
 
-app.post('/timerData', (req, res) => {
-  timerData = {...req.body};
-  res.send(timerData);
-});
+/**
+ * Save save file
+ */
+function saveSave() {
+  fs.writeFile(saveFilePath, JSON.stringify(save, null, 2),
+               function writeJSON(err) {
+                 if (err) return console.log('Error saving save:', err);
+               });
+}
 
 app.post('/timerUpdate', (req, res) => {
   const timerIndex = timerData.findIndex(((t) => t.id === req.body.id));
   timerData[timerIndex] = {...req.body};
   res.send(timerData[timerIndex]);
-  console.log(timerData[timerIndex]);
+  console.log('update:', timerData[timerIndex]);
+  saveSave();
+});
 
-  // Save save
-  fs.writeFile(saveFilePath, JSON.stringify(save, null, 2),
-               function writeJSON(err) {
-                 if (err) return console.log('Error saving save:', err);
-               });
+app.post('/timerAdd', (req, res) => {
+  const now = new Date();
+  timerData.push({id: nanoid(), title: req.body.title, startTime: now});
+  res.send(timerData[timerData.length - 1]);
+  console.log('new:', timerData[timerData.length - 1]);
+  saveSave();
 });
