@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef, useCallback} from 'react';
 
 /**
  * Timer react component
@@ -8,37 +8,50 @@ import React, {useState, useEffect} from 'react';
 function Timer(props) {
   const [isRunning, setIsRunning] = useState(
     props.startTime && !props.endTime ? true : false);
-  const [startTime, setStartTime] = useState(props.startTime || null);
-  const [endTime, setEndTime] = useState(props.endTime || null);
   const [elapsed, setElapsed] = useState(
     props.endTime ?
       calculateElapsed(props.startTime, props.endTime) :
       '0:00:00');
-  const [title, setTitle] = useState(props.title || '');
-  const [description, setDescription] = useState(props.description || '');
+
+  const [data, setData] = useState({
+    id: props.id,
+    startTime: props.startTime || null,
+    endTime: props.endTime || null,
+    title: props.title || '',
+    description: props.description || ''
+  });
 
   const [isEditing, setIsEditing] = useState(false);
-  const [startTimeDisplayValue, setStartTimeDisplayValue] = useState(
-    props.startTime ?
-      props.startTime.toLocaleTimeString('en-GB').substring(0, 5) : '');
-  const [endTimeDisplayValue, setEndTimeDisplayValue] = useState(
-    props.endTime ?
-      props.endTime.toLocaleTimeString('en-GB').substring(0, 5) : '');
+  const [displayTimes, setDisplayTimes] = useState({
+    start: props.startTime ?
+      getDisplayTime(props.startTime) : '',
+    end: props.endTime ?
+      getDisplayTime(props.endTime) : ''
+  });
   const [editValues, setEditValues] = useState({
-    startTime: startTimeDisplayValue,
-    endTime: endTimeDisplayValue,
-    title: title,
-    description: description});
+    startTime: displayTimes.start,
+    endTime: displayTimes.end,
+    title: data.title,
+    description: data.description
+  });
+
+  // to help avoid running the update hook unnecessarily
+  const firstRenderRef = useRef(true);
+  const isFirstRender = useCallback(() => {
+    if (firstRenderRef.current) {
+      firstRenderRef.current = false;
+      return true;
+    }
+  }, [firstRenderRef]);
 
   /**
    * Start timer, saving start time
    */
   function start() {
     const now = new Date();
-    setStartTime(now);
-    setStartTimeDisplayValue(now.toLocaleTimeString('en-GB').substring(0, 5));
-    setEditValues({...editValues,
-                   startTime: now.toLocaleTimeString('en-GB').substring(0, 5)});
+    setData({...data, startTime: now});
+    setDisplayTimes({...displayTimes, start: getDisplayTime(now)});
+    setEditValues({...editValues, startTime: getDisplayTime(now)});
     setIsRunning(true);
   }
 
@@ -47,10 +60,9 @@ function Timer(props) {
    */
   function stop() {
     const now = new Date();
-    setEndTime(now);
-    setEndTimeDisplayValue(now.toLocaleTimeString('en-GB').substring(0, 5));
-    setEditValues({...editValues,
-                   endTime: now.toLocaleTimeString('en-GB').substring(0, 5)});
+    setData({...data, endTime: now});
+    setDisplayTimes({...displayTimes, end: getDisplayTime(now)});
+    setEditValues({...editValues, endTime: getDisplayTime(now)});
     setIsRunning(false);
   }
 
@@ -74,29 +86,39 @@ function Timer(props) {
     return hours + ':' + minutes + ':' + seconds;
   }
 
+  /**
+   * Get display time (HH:MM) from date
+   * @param {Date} date
+   * @return {String}
+   */
+  function getDisplayTime(date) {
+    return date.toLocaleTimeString('en-GB').substring(0, 5);
+  }
+
   // Tick elapsed every second while running
   useEffect(() => {
     let tickFunctionId = null;
     if (isRunning) {
       tickFunctionId = setInterval(() => {
-        setElapsed(calculateElapsed(startTime, new Date()));
+        setElapsed(calculateElapsed(data.startTime, new Date()));
       }, 1000);
     } else if (!isRunning && elapsed !== '0:00:00') {
       clearInterval(tickFunctionId);
     }
     return () => clearInterval(tickFunctionId);
-  }, [isRunning, startTime, elapsed]);
+  }, [isRunning, data.startTime, elapsed]);
 
-  // Update data on server when the times, title, or description change
+  // Update server when (and only when) the times, title, or description change
   useEffect(() => {
+    if (isFirstRender()) return;
     fetch('timerUpdate', {
       method: 'post',
-      body: JSON.stringify({...props, startTime, endTime, title, description}),
+      body: JSON.stringify(data),
       headers: {'Content-Type': 'application/json'},
     })
       .then((res) => res.json())
       .then((json) => console.log(json));
-  }, [props, startTime, endTime, title, description]);
+  }, [data, isFirstRender]);
 
   /**
    * onChange function for edit values to keep in sync with DOM
@@ -114,30 +136,35 @@ function Timer(props) {
   function handleSubmit(event) {
     event.preventDefault();
 
+    const newData = {};
+    const newDisplayTimes = {};
+
     const [startHours, startMinutes] = editValues.startTime.split(':');
-    // Have to clone the Date object before mutating it, otherwise the
-    //  useEffect hook won’t be called when we set the state
-    const newStartTime = new Date(startTime.valueOf());
+    // Clone the Date object before mutating it
+    const newStartTime = new Date(data.startTime.valueOf());
     newStartTime.setHours(startHours);
     newStartTime.setMinutes(startMinutes);
-    setStartTime(newStartTime);
-    setStartTimeDisplayValue(editValues.startTime);
+    newData.startTime = newStartTime;
+    newDisplayTimes.start = editValues.startTime;
 
-    if (endTime) {
+    if (data.endTime) {
       const [endHours, endMinutes] = editValues.endTime.split(':');
-      const newEndTime = new Date(endTime.valueOf());
+      const newEndTime = new Date(data.endTime.valueOf());
       newEndTime.setHours(endHours);
       newEndTime.setMinutes(endMinutes);
-      setEndTime(newEndTime);
-      setEndTimeDisplayValue(editValues.endTime);
+      newData.endTime = newEndTime;
+      newDisplayTimes.end = editValues.endTime;
 
       setElapsed(calculateElapsed(newStartTime, newEndTime));
     } else {
       setElapsed(calculateElapsed(newStartTime, new Date()));
     }
 
-    setTitle(editValues.title);
-    setDescription(editValues.description);
+    newData.title = editValues.title;
+    newData.description = editValues.description;
+
+    setData({...data, ...newData});
+    setDisplayTimes({...displayTimes, ...newDisplayTimes});
 
     setIsEditing(false);
   }
@@ -146,8 +173,9 @@ function Timer(props) {
    * When user cancels editing, revert to old values
    */
   function handleCancel() {
-    setEditValues({...editValues, startTime: startTimeDisplayValue,
-                   endTime: endTimeDisplayValue, title, description});
+    setEditValues({...editValues, startTime: displayTimes.start,
+                   endTime: displayTimes.end, title: data.title,
+                   description: data.description});
     setIsEditing(false);
   }
 
@@ -163,7 +191,7 @@ function Timer(props) {
        </form> :
        <button className="timer-title"
                onClick={() => setIsEditing(true)}>
-         {title}
+         {data.title}
        </button>
       }
       {/* elapsed & start/stop */}
@@ -193,14 +221,14 @@ function Timer(props) {
                   style={{width: editValues.startTime.length + 'ch'}}/>
            <button type="submit" style={{display: 'none'}}/>
          </form> :
-         startTime &&
+         data.startTime &&
          <button onClick={() => setIsEditing(true)} className="start-time"
-                 title={startTime.toLocaleString('en-GB')}>
-           {startTimeDisplayValue}
+                 title={data.startTime.toLocaleString('en-GB')}>
+           {displayTimes.start}
          </button>
         }
         {/* separator */}
-        {startTime ? <>-</> : <></>}
+        {data.startTime ? <>-</> : <></>}
         {/* endTime */}
         {isEditing ?
          <form onSubmit={handleSubmit} autoComplete="off">
@@ -209,10 +237,10 @@ function Timer(props) {
                   style={{width: editValues.endTime.length + 'ch'}}/>
            <button type="submit" style={{display: 'none'}}/>
          </form> :
-         endTime &&
+         data.endTime &&
          <button onClick={() => setIsEditing(true)} className="end-time"
-                 title={endTime.toLocaleString('en-GB')}>
-           {endTimeDisplayValue}
+                 title={data.endTime.toLocaleString('en-GB')}>
+           {displayTimes.end}
          </button>
         }
         {/* edit confirm and cancel buttons */}
@@ -233,7 +261,7 @@ function Timer(props) {
        </form> :
        <button className="timer-description"
                onClick={() => setIsEditing(true)}>
-         {description}
+         {data.description}
        </button>
       }
     </div>
