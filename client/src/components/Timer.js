@@ -1,5 +1,7 @@
 import React, {useState, useEffect, useRef, useCallback} from 'react';
 
+import SubmittableInput from './SubmittableInput';
+
 /**
  * Timer react component
  * @param {Object} props
@@ -183,12 +185,10 @@ function Timer(props) {
     <div className="timer">
       {/* title */}
       {isEditing ?
-       <form onSubmit={handleSubmit}>
-         <input name="title" value={editValues.title}
-                onChange={handleEditValuesChange}
-                style={{width: editValues.title.length + 'ch'}}/>
-         <button type="submit" style={{display: 'none'}}/>
-       </form> :
+       <SubmittableInput name="title" value={editValues.title}
+                         style={{width: editValues.title.length + 'ch'}}
+                         onChange={handleEditValuesChange}
+                         onSubmit={handleSubmit}/> :
        <button className="timer-title"
                onClick={() => setIsEditing(true)}>
          {data.title}
@@ -215,12 +215,10 @@ function Timer(props) {
         <br/>
         {/* startTime */}
         {isEditing ?
-         <form onSubmit={handleSubmit} autoComplete="off">
-           <input name="startTime" value={editValues.startTime}
-                  onChange={handleEditValuesChange}
-                  style={{width: editValues.startTime.length + 'ch'}}/>
-           <button type="submit" style={{display: 'none'}}/>
-         </form> :
+         <SubmittableInput name="startTime" value={editValues.startTime}
+                           style={{width: editValues.startTime.length + 'ch'}}
+                           onChange={handleEditValuesChange}
+                           onSubmit={handleSubmit} autoComplete="off"/> :
          data.startTime &&
          <button onClick={() => setIsEditing(true)} className="start-time"
                  title={data.startTime.toLocaleString('en-GB')}>
@@ -231,12 +229,10 @@ function Timer(props) {
         {data.startTime ? <>-</> : <></>}
         {/* endTime */}
         {isEditing ?
-         <form onSubmit={handleSubmit} autoComplete="off">
-           <input name="endTime" value={editValues.endTime}
-                  onChange={handleEditValuesChange}
-                  style={{width: editValues.endTime.length + 'ch'}}/>
-           <button type="submit" style={{display: 'none'}}/>
-         </form> :
+         <SubmittableInput name="endTime" value={editValues.endTime}
+                           style={{width: editValues.endTime.length + 'ch'}}
+                           onChange={handleEditValuesChange}
+                           onSubmit={handleSubmit} autoComplete="off"/> :
          data.endTime &&
          <button onClick={() => setIsEditing(true)} className="end-time"
                  title={data.endTime.toLocaleString('en-GB')}>
@@ -253,12 +249,10 @@ function Timer(props) {
       <br/>
       {/* description */}
       {isEditing ?
-       <form onSubmit={handleSubmit}>
-         <input name="description" value={editValues.description}
-                onChange={handleEditValuesChange}
-                style={{width: editValues.title.length + 'ch'}}/>
-         <button type="submit" style={{display: 'none'}}/>
-       </form> :
+       <SubmittableInput name="description" value={editValues.description}
+                           style={{width: editValues.title.length + 'ch'}}
+                           onChange={handleEditValuesChange}
+                           onSubmit={handleSubmit}/> :
        <button className="timer-description"
                onClick={() => setIsEditing(true)}>
          {data.description}

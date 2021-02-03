@@ -1,5 +1,7 @@
 import React, {useState} from 'react';
 
+import SubmittableInput from './SubmittableInput';
+
 /**
  * Timebar
  * @param {Object} props
@@ -28,12 +30,10 @@ function Timebar(props) {
 
   return (
     <div className="timebar">
-      <form onSubmit={handleSubmit}>
-        <input placeholder="What are you working on?"
-               value={value}
-               onChange={handleValueChange}/>
-        <button type="submit" style={{display: 'none'}}/>
-      </form>
+      <SubmittableInput value={value}
+                        placeholder="What are you working on?"
+                        onChange={handleValueChange}
+                        onSubmit={handleSubmit}/>
     </div>
   );
 }

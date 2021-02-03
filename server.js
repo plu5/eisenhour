@@ -3,7 +3,7 @@ const express = require('express');
 const nanoid = require('nanoid').nanoid;
 const bodyParser = require('body-parser');
 
-let timerData = [];
+let timerData = []; // probably should be renamed
 let save = null;
 const saveFilePath = 'save.json';
 

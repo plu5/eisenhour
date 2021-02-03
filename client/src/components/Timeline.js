@@ -1,8 +1,8 @@
 import React, {useState, useEffect} from 'react';
+require('json.date-extensions');
+
 import Timebar from './Timebar';
 import Timer from './Timer';
-
-require('json.date-extensions');
 
 /**
  * Timeline
