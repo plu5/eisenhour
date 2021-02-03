@@ -88,7 +88,7 @@ app.post('/timerAdd', (req, res) => {
   updateCurrentTimers(...getYearMonthDay(new Date(p.start)));
   currentTimers.push({id: nanoid(), title: p.title,
                       start: p.start});
-  res.send(currentTimers[currentTimers.length - 1]);
+  res.send(currentTimers);
   console.log('new:', currentTimers[currentTimers.length - 1]);
   saveSave();
 });

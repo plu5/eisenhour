@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect} from 'react';
 
 import DaySelector from './DaySelector';
 import Timebar from './Timebar';
@@ -33,11 +33,12 @@ function Timeline() {
   async function addTimer(title) {
     const start = new Date();
     updateDay(start);
-    await fetch('timerAdd', {
+    const response = await fetch('timerAdd', {
       method: 'post',
       body: JSON.stringify({title, start}),
       headers: {'Content-Type': 'application/json'},
     });
+    setTimers(await jsonToTimersArray(response));
   }
 
   return (
@@ -52,14 +53,21 @@ function Timeline() {
 }
 
 /**
+ * Get array of timers from JSON server response
+ * @param {JSON} response
+ */
+async function jsonToTimersArray(response) {
+  const timerData = await JSON.parseWithDate(await response.text());
+  return timerData ? timerData.reverse() : [];
+}
+
+/**
  * Get array of timers from server
  * @param {String} day in the format yyyy-m-d
  */
 async function fetchTimers(day) {
-  console.log(day);
   const response = await fetch('day/' + day);
-  const timerData = await JSON.parseWithDate(await response.text());
-  return timerData ? timerData.reverse() : [];
+  return jsonToTimersArray(response);
 }
 
 export default Timeline;
