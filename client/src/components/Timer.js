@@ -36,6 +36,7 @@ function Timer(props) {
     title: data.title,
     description: data.description
   });
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // to help avoid running the update hook unnecessarily
   const firstRenderRef = useRef(true);
@@ -181,6 +182,22 @@ function Timer(props) {
     setIsEditing(false);
   }
 
+  /**
+   * Delete self
+   */
+  function selfDestruct() {
+    fetch('timerDelete', {
+      method: 'post',
+      body: JSON.stringify({id: data.id}),
+      headers: {'Content-Type': 'application/json'},
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        console.log(json);
+        props.update();
+      });
+  }
+
   return (
     <div className="timer">
       {/* title */}
@@ -212,47 +229,65 @@ function Timer(props) {
            }
          </>
         }
+        {/* delete button */}
+        {isEditing ?
+         (isDeleting ?
+          <>
+            <span style={{color: 'darkred'}}>delete, are you sure? </span>
+            <button onClick={selfDestruct}>v</button>
+            <button onClick={() => setIsDeleting(false)}>x</button>
+          </> :
+          <button className="delete-button" onClick={() => setIsDeleting(true)}>
+            delete
+          </button>) :
+         <></>
+        }
         <br/>
-        {/* start time */}
-        {isEditing ?
-         <SubmittableInput name="start" value={editValues.start}
-                           style={{width: editValues.start.length + 'ch'}}
-                           onChange={handleEditValuesChange}
-                           onSubmit={handleSubmit} autoComplete="off"/> :
-         data.start &&
-         <button onClick={() => setIsEditing(true)} className="start-time"
-                 title={data.start.toLocaleString('en-GB')}>
-           {displayTimes.start}
-         </button>
+        {isDeleting ? <></> :
+         <div>
+           {/* start time */}
+           {isEditing ?
+            <SubmittableInput name="start" value={editValues.start}
+                              style={{width: editValues.start.length + 'ch'}}
+                              onChange={handleEditValuesChange}
+                              onSubmit={handleSubmit} autoComplete="off"/> :
+            data.start &&
+            <button onClick={() => setIsEditing(true)} className="start-time"
+                    title={data.start.toLocaleString('en-GB')}>
+              {displayTimes.start}
+            </button>
+           }
+           {/* separator */}
+           {data.start ? <>-</> : <></>}
+           {/* end time */}
+           {isEditing ?
+            <SubmittableInput name="end" value={editValues.end}
+                              style={{width: editValues.end.length + 'ch'}}
+                              onChange={handleEditValuesChange}
+                              onSubmit={handleSubmit} autoComplete="off"/> :
+            data.end &&
+            <button onClick={() => setIsEditing(true)} className="end-time"
+                    title={data.end.toLocaleString('en-GB')}>
+              {displayTimes.end}
+            </button>
+           }
+           {/* edit confirm and cancel buttons */}
+           {isEditing ?
+            <>
+              <button onClick={handleSubmit}>v</button>
+              <button onClick={handleCancel}>x</button>
+            </> : <></>
+           }
+         </div>
         }
-        {/* separator */}
-        {data.start ? <>-</> : <></>}
-        {/* end time */}
-        {isEditing ?
-         <SubmittableInput name="end" value={editValues.end}
-                           style={{width: editValues.end.length + 'ch'}}
-                           onChange={handleEditValuesChange}
-                           onSubmit={handleSubmit} autoComplete="off"/> :
-         data.end &&
-         <button onClick={() => setIsEditing(true)} className="end-time"
-                 title={data.end.toLocaleString('en-GB')}>
-           {displayTimes.end}
-         </button>
-        }
-        {/* edit confirm and cancel buttons */}
-        {isEditing ?
-         <>
-           <button onClick={handleSubmit}>v</button>
-           <button onClick={handleCancel}>x</button>
-         </> : <></>}
       </div>
       <br/>
       {/* description */}
       {isEditing ?
        <SubmittableInput name="description" value={editValues.description}
-                           style={{width: editValues.title.length + 'ch'}}
-                           onChange={handleEditValuesChange}
-                           onSubmit={handleSubmit}/> :
+                         style={{width: editValues.title.length + 'ch'}}
+                         onChange={handleEditValuesChange}
+                         onSubmit={handleSubmit}/> :
        <button className="timer-description"
                onClick={() => setIsEditing(true)}>
          {data.description}

@@ -49,7 +49,7 @@ function Timeline() {
     <div className="timeline">
       <Timebar addTimer={addTimer}/>
       {timers.map((t, i) => (
-        <Timer {...t} key={t.id}/>
+        <Timer {...t} update={fetchTimers} key={t.id}/>
       ))}
     </div>
   );

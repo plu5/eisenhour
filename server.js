@@ -60,3 +60,11 @@ app.post('/timerAdd', (req, res) => {
   console.log('new:', timerData[timerData.length - 1]);
   saveSave();
 });
+
+app.post('/timerDelete', (req, res) => {
+  const timerIndex = timerData.findIndex(((t) => t.id === req.body.id));
+  console.log('delete:', timerData[timerIndex]);
+  timerData.splice(timerIndex, 1);
+  res.send({deleted: req.body.id});
+  saveSave();
+});

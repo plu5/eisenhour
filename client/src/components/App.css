@@ -2,6 +2,15 @@ form, table {
   display: inline;
 }
 
+input, button {
+  display: inline-block;
+  padding: 3px 6px;
+  font-size: 14px;
+  border-radius: 0;
+  -webkit-appearance: none;
+  border: 1px solid grey; 
+}
+
 .App {
   text-align: center;
 }
@@ -34,6 +43,10 @@ body
 
 .time-section {
   float: right;
+}
+
+.delete-button {
+  position: sticky;
 }
 
 .timer-title {
