@@ -9,30 +9,30 @@ import SubmittableInput from './SubmittableInput';
  */
 function Timer(props) {
   const [isRunning, setIsRunning] = useState(
-    props.startTime && !props.endTime ? true : false);
+    props.start && !props.end ? true : false);
   const [elapsed, setElapsed] = useState(
-    props.endTime ?
-      calculateElapsed(props.startTime, props.endTime) :
+    props.end ?
+      calculateElapsed(props.start, props.end) :
       '0:00:00');
 
   const [data, setData] = useState({
     id: props.id,
-    startTime: props.startTime || null,
-    endTime: props.endTime || null,
+    start: props.start || null,
+    end: props.end || null,
     title: props.title || '',
     description: props.description || ''
   });
 
   const [isEditing, setIsEditing] = useState(false);
   const [displayTimes, setDisplayTimes] = useState({
-    start: props.startTime ?
-      getDisplayTime(props.startTime) : '',
-    end: props.endTime ?
-      getDisplayTime(props.endTime) : ''
+    start: props.start ?
+      getDisplayTime(props.start) : '',
+    end: props.end ?
+      getDisplayTime(props.end) : ''
   });
   const [editValues, setEditValues] = useState({
-    startTime: displayTimes.start,
-    endTime: displayTimes.end,
+    start: displayTimes.start,
+    end: displayTimes.end,
     title: data.title,
     description: data.description
   });
@@ -51,9 +51,9 @@ function Timer(props) {
    */
   function start() {
     const now = new Date();
-    setData({...data, startTime: now});
+    setData({...data, start: now});
     setDisplayTimes({...displayTimes, start: getDisplayTime(now)});
-    setEditValues({...editValues, startTime: getDisplayTime(now)});
+    setEditValues({...editValues, start: getDisplayTime(now)});
     setIsRunning(true);
   }
 
@@ -62,21 +62,21 @@ function Timer(props) {
    */
   function stop() {
     const now = new Date();
-    setData({...data, endTime: now});
+    setData({...data, end: now});
     setDisplayTimes({...displayTimes, end: getDisplayTime(now)});
-    setEditValues({...editValues, endTime: getDisplayTime(now)});
+    setEditValues({...editValues, end: getDisplayTime(now)});
     setIsRunning(false);
   }
 
   /**
-   * Calculate elapsed time between startTime and endTime and return as a string
+   * Calculate elapsed time between start and end and return as a string
    *  in the format H:MM:SS
-   * @param {Date} startTime
-   * @param {Date} endTime
+   * @param {Date} start
+   * @param {Date} end
    * @return {String} elapsed time
    */
-  function calculateElapsed(startTime, endTime) {
-    let ms = endTime.getTime() - startTime.getTime();
+  function calculateElapsed(start, end) {
+    let ms = end.getTime() - start.getTime();
     const hours = Math.floor(ms / (60**2 * 1000));
     ms -= hours * (60**2 * 1000);
     let minutes = Math.floor(ms / (60 * 1000));
@@ -102,13 +102,13 @@ function Timer(props) {
     let tickFunctionId = null;
     if (isRunning) {
       tickFunctionId = setInterval(() => {
-        setElapsed(calculateElapsed(data.startTime, new Date()));
+        setElapsed(calculateElapsed(data.start, new Date()));
       }, 1000);
     } else if (!isRunning && elapsed !== '0:00:00') {
       clearInterval(tickFunctionId);
     }
     return () => clearInterval(tickFunctionId);
-  }, [isRunning, data.startTime, elapsed]);
+  }, [isRunning, data.start, elapsed]);
 
   // Update server when (and only when) the times, title, or description change
   useEffect(() => {
@@ -131,8 +131,8 @@ function Timer(props) {
   }
 
   /**
-   * onSubmit function for updating startTime and endTime in accordance with
-   *  startTimeEditValue and endTimeEditValue
+   * onSubmit function for updating start and end in accordance with
+   *  startEditValue and endEditValue
    * @param {event} event
    */
   function handleSubmit(event) {
@@ -141,25 +141,25 @@ function Timer(props) {
     const newData = {};
     const newDisplayTimes = {};
 
-    const [startHours, startMinutes] = editValues.startTime.split(':');
+    const [startHours, startMinutes] = editValues.start.split(':');
     // Clone the Date object before mutating it
-    const newStartTime = new Date(data.startTime.valueOf());
-    newStartTime.setHours(startHours);
-    newStartTime.setMinutes(startMinutes);
-    newData.startTime = newStartTime;
-    newDisplayTimes.start = editValues.startTime;
+    const newStart = new Date(data.start.valueOf());
+    newStart.setHours(startHours);
+    newStart.setMinutes(startMinutes);
+    newData.start = newStart;
+    newDisplayTimes.start = editValues.start;
 
-    if (data.endTime) {
-      const [endHours, endMinutes] = editValues.endTime.split(':');
-      const newEndTime = new Date(data.endTime.valueOf());
-      newEndTime.setHours(endHours);
-      newEndTime.setMinutes(endMinutes);
-      newData.endTime = newEndTime;
-      newDisplayTimes.end = editValues.endTime;
+    if (data.end) {
+      const [endHours, endMinutes] = editValues.end.split(':');
+      const newEnd = new Date(data.end.valueOf());
+      newEnd.setHours(endHours);
+      newEnd.setMinutes(endMinutes);
+      newData.end = newEnd;
+      newDisplayTimes.end = editValues.end;
 
-      setElapsed(calculateElapsed(newStartTime, newEndTime));
+      setElapsed(calculateElapsed(newStart, newEnd));
     } else {
-      setElapsed(calculateElapsed(newStartTime, new Date()));
+      setElapsed(calculateElapsed(newStart, new Date()));
     }
 
     newData.title = editValues.title;
@@ -175,8 +175,8 @@ function Timer(props) {
    * When user cancels editing, revert to old values
    */
   function handleCancel() {
-    setEditValues({...editValues, startTime: displayTimes.start,
-                   endTime: displayTimes.end, title: data.title,
+    setEditValues({...editValues, start: displayTimes.start,
+                   end: displayTimes.end, title: data.title,
                    description: data.description});
     setIsEditing(false);
   }
@@ -213,29 +213,29 @@ function Timer(props) {
          </>
         }
         <br/>
-        {/* startTime */}
+        {/* start time */}
         {isEditing ?
-         <SubmittableInput name="startTime" value={editValues.startTime}
-                           style={{width: editValues.startTime.length + 'ch'}}
+         <SubmittableInput name="start" value={editValues.start}
+                           style={{width: editValues.start.length + 'ch'}}
                            onChange={handleEditValuesChange}
                            onSubmit={handleSubmit} autoComplete="off"/> :
-         data.startTime &&
+         data.start &&
          <button onClick={() => setIsEditing(true)} className="start-time"
-                 title={data.startTime.toLocaleString('en-GB')}>
+                 title={data.start.toLocaleString('en-GB')}>
            {displayTimes.start}
          </button>
         }
         {/* separator */}
-        {data.startTime ? <>-</> : <></>}
-        {/* endTime */}
+        {data.start ? <>-</> : <></>}
+        {/* end time */}
         {isEditing ?
-         <SubmittableInput name="endTime" value={editValues.endTime}
-                           style={{width: editValues.endTime.length + 'ch'}}
+         <SubmittableInput name="end" value={editValues.end}
+                           style={{width: editValues.end.length + 'ch'}}
                            onChange={handleEditValuesChange}
                            onSubmit={handleSubmit} autoComplete="off"/> :
-         data.endTime &&
+         data.end &&
          <button onClick={() => setIsEditing(true)} className="end-time"
-                 title={data.endTime.toLocaleString('en-GB')}>
+                 title={data.end.toLocaleString('en-GB')}>
            {displayTimes.end}
          </button>
         }
