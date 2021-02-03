@@ -55,8 +55,7 @@ app.post('/timerUpdate', (req, res) => {
 });
 
 app.post('/timerAdd', (req, res) => {
-  const now = new Date();
-  timerData.push({id: nanoid(), title: req.body.title, start: now});
+  timerData.push({id: nanoid(), title: req.body.title, start: req.body.start});
   res.send(timerData[timerData.length - 1]);
   console.log('new:', timerData[timerData.length - 1]);
   saveSave();

@@ -35,7 +35,7 @@ function Timeline() {
   function addTimer(title) {
     fetch('timerAdd', {
       method: 'post',
-      body: JSON.stringify({title}),
+      body: JSON.stringify({title, start: new Date()}),
       headers: {'Content-Type': 'application/json'},
     })
       .then((res) => res.json())
