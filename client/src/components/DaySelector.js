@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useCallback} from 'react';
 import DatePicker from 'react-datepicker';
 import {createPortal} from 'react-dom';
 
@@ -10,20 +10,30 @@ import './react-datepicker.css';
  * @return {jsx}
  */
 function DaySelector(props) {
-  const [date, setDate] = useState(new Date());
+  const [date, setDate] = useState(props.date);
   const update = useRef(props.update);
 
+  // to help avoid running the update hook unnecessarily
+  const firstRenderRef = useRef(true);
+  const isFirstRender = useCallback(() => {
+    if (firstRenderRef.current) {
+      firstRenderRef.current = false;
+      return true;
+    }
+  }, [firstRenderRef]);
+
   useEffect(() => {
-    console.log('updating');
+    if (isFirstRender()) return;
+    console.log('updating you');
     update.current(date);
-  }, [update, date]);
+  }, [update, date, isFirstRender]);
 
   /**
    * Add num days to date.
    * @param {Integer} num days to add. Pass in a negative value to subtract.
    */
   function addDays(num) {
-    const newDate = new Date(date.valueOf()); 
+    const newDate = new Date(date.valueOf());
     newDate.setDate(date.getDate() + num);
     setDate(newDate);
   }

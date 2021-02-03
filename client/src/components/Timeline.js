@@ -12,61 +12,54 @@ require('json.date-extensions');
  */
 function Timeline() {
   const [timers, setTimers] = useState([]);
+  const update = async () => setTimers(await fetchTimers(day));
 
   const getDay = (date) => {
     return date.getFullYear() + '-' +
       (date.getMonth() + 1) + '-' + date.getDate();
   };
-  const day = useRef(getDay(new Date()));
+  const [day, setDay] = useState(getDay(new Date()));
+  const updateDay = (date) => setDay(getDay(date));
 
-  // Get timer data on load
+  // Update timer data on load and on date change
   useEffect(() => {
-    fetchTimers();
-  }, []);
+    (async () => setTimers(await fetchTimers(day)))();
+  }, [day]);
 
   /**
-   * Update timers from server timer data
-   */
-  async function fetchTimers() {
-    console.log(day.current);
-    const response = await fetch('day/' + day.current);
-    const timerData = await JSON.parseWithDate(await response.text());
-    if (timerData) {
-      setTimers(timerData.reverse());
-    }
-  }
-
-  function updateDay(date) {
-    day.current = getDay(date);
-    console.log(day);
-    fetchTimers();
-  }
-
-  /**
-   * Add new timer and update data
+   * Add new timer starting now and move to today
    * @param {String} title
    */
   async function addTimer(title) {
     const start = new Date();
     updateDay(start);
-    await fetchTimers();
     await fetch('timerAdd', {
       method: 'post',
       body: JSON.stringify({title, start}),
       headers: {'Content-Type': 'application/json'},
     });
-    await fetchTimers();
   }
 
   return (
     <div className="timeline">
-      <DaySelector update={updateDay}/>
+      <DaySelector date={new Date(day.split('-'))} update={updateDay}/>
       <Timebar addTimer={addTimer}/>
       {timers.map((t, i) => (
-        <Timer {...t} update={fetchTimers} key={t.id}/>
+        <Timer {...t} update={update} key={t.id}/>
       ))}
     </div>
   );
+}
+
+/**
+ * Get array of timers from server
+ * @param {String} day in the format yyyy-m-d
+ */
+async function fetchTimers(day) {
+  console.log(day);
+  const response = await fetch('day/' + day);
+  const timerData = await JSON.parseWithDate(await response.text());
+  return timerData ? timerData.reverse() : [];
 }
 
 export default Timeline;

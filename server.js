@@ -1,5 +1,4 @@
 const fs = require('fs');
-const get = require('lodash.get');
 const express = require('express');
 const nanoid = require('nanoid').nanoid;
 const bodyParser = require('body-parser');
@@ -32,12 +31,34 @@ io.on('connection', function(socket) {
   // });
 });
 
-app.get('/day/:year-:month-:day', (req, res) => {
-  currentTimers = get(save, 'y' + req.params.year + '.m' +
-                      req.params.month + '.d' + req.params.day);
-  if (!currentTimers) currentTimers = [];
-  res.send(currentTimers);
-});
+/**
+ * Get year, month, day from a Date object.
+ * @param {Date} date
+ * @return {Array} [year, month, day]
+ */
+function getYearMonthDay(date) {
+  return [date.getFullYear(),
+          (date.getMonth() + 1),
+          date.getDate()];
+}
+
+/**
+ * Update currentTimers to array in save.year.month.day and return it.
+ * @param {Integer} year
+ * @param {Integer} month
+ * @param {Integer} day
+ * @return {Array} currentTimers
+ */
+function updateCurrentTimers(year, month, day) {
+  const y = 'y' + year;
+  const m = 'm' + month;
+  const d = 'd' + day;
+  if (!save[y]) save[y] = {};
+  if (!save[y][m]) save[y][m] = {};
+  if (!save[y][m][d]) save[y][m][d] = [];
+  currentTimers = save[y][m][d];
+  return currentTimers;
+}
 
 /**
  * Save save file
@@ -49,6 +70,11 @@ function saveSave() {
                });
 }
 
+app.get('/day/:year-:month-:day', (req, res) => {
+  const p = req.params;
+  res.send(updateCurrentTimers(p.year, p.month, p.day));
+});
+
 app.post('/timerUpdate', (req, res) => {
   const timerIndex = currentTimers.findIndex(((t) => t.id === req.body.id));
   currentTimers[timerIndex] = {...req.body};
@@ -58,8 +84,10 @@ app.post('/timerUpdate', (req, res) => {
 });
 
 app.post('/timerAdd', (req, res) => {
-  currentTimers.push({id: nanoid(), title: req.body.title,
-                      start: req.body.start});
+  const p = req.body;
+  updateCurrentTimers(...getYearMonthDay(new Date(p.start)));
+  currentTimers.push({id: nanoid(), title: p.title,
+                      start: p.start});
   res.send(currentTimers[currentTimers.length - 1]);
   console.log('new:', currentTimers[currentTimers.length - 1]);
   saveSave();
