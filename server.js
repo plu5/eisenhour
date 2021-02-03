@@ -7,11 +7,16 @@ let currentTimers = [];
 let save = null;
 const saveFilePath = 'save.json';
 
-// Load save
+// Load save, create if doesn’t exist
+if (!fs.existsSync(saveFilePath)) {
+  fs.writeFileSync(saveFilePath, '{}', (err) => {
+    if (err) return console.log('Error creating save:', err);
+  });
+}
 fs.readFile(saveFilePath, (err, content) => {
-  if (err) return console.log('Error loading save:', err);
-  save = JSON.parse(content);
-});
+    if (err) return console.log('Error loading save:', err);
+    save = JSON.parse(content);
+  });
 
 // Set up express and io
 const app = module.exports.app = express();
