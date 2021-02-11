@@ -130,10 +130,44 @@ app.post('/timerAdd', (req, res) => {
   saveSave();
 });
 
+/**
+ * Attempt to delete object with given id from given array.
+ * @param {String} id
+ * @param {Array} array
+ * @return {Bool} true if object was deleted, false if not found.
+ */
+function tryDeleteObject(id, array) {
+  const index = array.findIndex(((t) => t.id === id));
+  if (index !== -1) {
+    console.log('delete:', array[index]);
+    array.splice(index, 1);
+    return true;
+  } else {
+    // console.log(`tryDeleteTimer failed; couldn’t find timer with id ${id}`);
+    return false;
+  }
+}
+
+/**
+ * Attempt to delete timer with given id from the entire save.
+ * @param {String} id
+ * @return {Bool} true if object was deleted, false if not found.
+ */
+function tryDeleteTimerFromSave(id) {
+  for (const [, year] of Object.entries(save)) {
+    for (const [, month] of Object.entries(year)) {
+      for (const [, day] of Object.entries(month)) {
+        if (tryDeleteObject(id, day)) {
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
 app.post('/timerDelete', (req, res) => {
-  const timerIndex = currentTimers.findIndex(((t) => t.id === req.body.id));
-  console.log('delete:', currentTimers[timerIndex]);
-  currentTimers.splice(timerIndex, 1);
+  tryDeleteObject(req.body.id, currentTimers);
   res.send({deleted: req.body.id});
   saveSave();
 
@@ -169,13 +203,24 @@ async function getEvents(calendar, syncToken, pageToken) {
 }
 
 /**
- * Put events from gcal into our data as timers.
+ * Put events from gcal into our data.
  * @param {Array} events
  */
-function eventsToTimers(events) {
+function eventsToData(events) {
   for (const event of events) {
+    // If deleted
+    if (event.status === 'cancelled') {
+      tryDeleteTimerFromSave(event.id);
+      break;
+    }
+    // If update to an event we already have
+    const updateDate = new Date(event.updated);
+    if (updateDate > lastSyncDate) {
+      tryDeleteTimerFromSave(event.id);
+    }
     const start = new Date(event.start.dateTime);
-    getSaveDayArray(...getYearMonthDay(start)).push({
+    const dayArray = getSaveDayArray(...getYearMonthDay(start));
+    dayArray.push({
       id: event.id,
       start,
       end: new Date(event.end.dateTime),
@@ -187,14 +232,17 @@ function eventsToTimers(events) {
 }
 
 /**
- * Save syncToken to file.
+ * Save syncToken to file + date of sync.
  * @param {String} syncToken
  */
 function saveSyncToken(syncToken) {
-  fs.writeFileSync(syncTokenPath, JSON.stringify({syncToken}), (err) => {
+  const date = new Date();
+  fs.writeFileSync(syncTokenPath, JSON.stringify({syncToken, date}), (err) => {
     if (err) return console.log('Error saving sync token:', err);
   });
 }
+
+let lastSyncDate;
 
 /**
  * Sync down events from gcal.
@@ -206,11 +254,13 @@ async function syncDown() {
   // First check if we have a sync token and if so use it
   if (fs.existsSync(syncTokenPath)) {
     try {
-      const syncTokenFile = fs.readFileSync(syncTokenPath);
-      const syncToken = JSON.parse(syncTokenFile).syncToken;
+      const parsedContents = JSON.parse(fs.readFileSync(syncTokenPath));
+      const syncToken = parsedContents.syncToken;
       if (syncToken) {
         initialParams.push(syncToken);
         console.log('sync token', syncToken);
+
+        lastSyncDate = new Date(parsedContents.date);
       } else {
         initialParams.push(null);
       }
@@ -227,7 +277,7 @@ async function syncDown() {
     const params = [...initialParams];
     if (nextPageToken) params.push(nextPageToken);
     const res = await getEvents(...params);
-    eventsToTimers(res.data.items);
+    eventsToData(res.data.items);
     if (res.data.nextSyncToken) saveSyncToken(res.data.nextSyncToken);
     if (res.data.nextPageToken) {
       nextPageToken = res.data.nextPageToken;
@@ -237,6 +287,7 @@ async function syncDown() {
       break;
     }
   } while (nextPageToken);
+
   console.log('done?');
   saveSave();
 }
