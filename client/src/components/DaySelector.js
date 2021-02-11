@@ -10,6 +10,7 @@ import './react-datepicker.css';
  * @return {jsx}
  */
 function DaySelector(props) {
+  const [today,] = useState(new Date());
   const [date, setDate] = useState(props.date);
   const update = useRef(props.update);
 
@@ -43,10 +44,15 @@ function DaySelector(props) {
       <button onClick={() => addDays(-1)}>&lt;</button>
       <DatePicker dateFormat="yyyy-MM-dd" selected={date}
                   onChange={(date) => setDate(date)}
+                  showWeekNumbers
+                  maxDate={today}
                   popperContainer={
                     ({children}) => createPortal(children,document.body)}
                   todayButton="→ today"/>
-      <button onClick={() => addDays(1)}>&gt;</button>
+      {today.toDateString() === date.toDateString() ?
+       <></> :
+       <button onClick={() => addDays(1)}>&gt;</button>
+      }
     </div>
   );
 }

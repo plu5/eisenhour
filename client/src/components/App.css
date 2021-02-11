@@ -78,3 +78,9 @@ body
 .react-datepicker__input-container input {
   width: 5em;
 }
+
+.react-datepicker__week-number {
+  color: black !important;
+  background-color: #f1f3f4;
+  font-style: italic;
+}
