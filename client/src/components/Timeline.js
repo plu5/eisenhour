@@ -50,10 +50,20 @@ function Timeline() {
     // setTimers(await jsonToTimersArray(response));
   }
 
+  async function syncUp() {
+    const response = await fetch('syncUp', {
+      method: 'post',
+      body: JSON.stringify({}),
+      headers: {'Content-Type': 'application/json'},
+    });
+    // setTimers(await jsonToTimersArray(response));
+  }
+
   return (
     <div className="timeline">
       <DaySelector date={new Date(day.split('-'))} update={updateDay}/>
       <button onClick={syncDown}>sync down</button>
+      <button onClick={syncUp}>sync up</button>
       <Timebar addTimer={addTimer}/>
       {timers.map((t, i) => (
         <Timer {...t} update={update} key={t.id}/>

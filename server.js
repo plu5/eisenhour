@@ -32,7 +32,10 @@ io.on('connection', function(socket) {
 let currentTimers = [];
 let save = null;
 const saveFilePath = 'save.json';
-const syncTokenPath = 'synctoken.json';
+const syncInfoPath = 'syncInfo.json';
+let syncInfo = null;
+let lastSyncDate = null;
+let queue = [];
 
 // Load save, create if doesn’t exist
 if (!fs.existsSync(saveFilePath)) {
@@ -41,8 +44,20 @@ if (!fs.existsSync(saveFilePath)) {
   });
 }
 fs.readFile(saveFilePath, (err, content) => {
-    if (err) return console.log('Error loading save:', err);
-    save = JSON.parse(content);
+  if (err) return console.log('Error loading save:', err);
+  save = JSON.parse(content);
+});
+
+// Load syncInfo, create if doesn’t exist
+if (!fs.existsSync(syncInfoPath)) {
+  fs.writeFileSync(syncInfoPath, '{}', (err) => {
+    if (err) return console.log('Error creating syncInfo:', err);
+  });
+}
+fs.readFile(syncInfoPath, (err, content) => {
+  if (err) return console.log('Error loading syncInfo:', err);
+  syncInfo = JSON.parse(content);
+  if (syncInfo.upQueue) queue = syncInfo.upQueue;
 });
 
 /**
@@ -114,17 +129,18 @@ app.get('/day/:year-:month-:day', (req, res) => {
 
 app.post('/timerUpdate', (req, res) => {
   const timerIndex = currentTimers.findIndex(((t) => t.id === req.body.id));
-  currentTimers[timerIndex] = {...req.body, par_with_remote: false};
+  currentTimers[timerIndex] = {...req.body};
   res.send(currentTimers[timerIndex]);
   console.log('update:', currentTimers[timerIndex]);
   saveSave();
+  addToQueue('update', currentTimers[timerIndex]);
 });
 
 app.post('/timerAdd', (req, res) => {
   const p = req.body;
   updateCurrentTimers(...getYearMonthDay(new Date(p.start)));
   currentTimers.push({id: nanoid(), title: p.title,
-                      start: p.start, par_with_remote: false});
+                      start: p.start});
   res.send(currentTimers);
   console.log('new:', currentTimers[currentTimers.length - 1]);
   saveSave();
@@ -137,7 +153,7 @@ app.post('/timerAdd', (req, res) => {
  * @return {Bool} true if object was deleted, false if not found.
  */
 function tryDeleteObject(id, array) {
-  const index = array.findIndex(((t) => t.id === id));
+  const index = array.findIndex((t) => t.id === id);
   if (index !== -1) {
     console.log('delete:', array[index]);
     array.splice(index, 1);
@@ -167,15 +183,20 @@ function tryDeleteTimerFromSave(id) {
 }
 
 app.post('/timerDelete', (req, res) => {
+  addToQueue('delete', JSON.parse(JSON.stringify(
+    currentTimers.find((t) => t.id === req.body.id))));
   tryDeleteObject(req.body.id, currentTimers);
   res.send({deleted: req.body.id});
   saveSave();
-
-  // TODO: some way to mark we need to delete on remote
 });
 
 app.post('/events', (req, res) => {
   syncDown();
+  res.send({blah: 'blah'});
+});
+
+app.post('/syncUp', (req, res) => {
+  syncUp();
   res.send({blah: 'blah'});
 });
 
@@ -226,7 +247,6 @@ function eventsToData(events) {
       end: new Date(event.end.dateTime),
       title: event.summary,
       description: event.details || '',
-      par_with_remote: true,
     });
   }
 }
@@ -237,12 +257,22 @@ function eventsToData(events) {
  */
 function saveSyncToken(syncToken) {
   const date = new Date();
-  fs.writeFileSync(syncTokenPath, JSON.stringify({syncToken, date}), (err) => {
+  syncInfo.syncToken = syncToken;
+  syncInfo.date = date;
+  fs.writeFileSync(syncInfoPath, JSON.stringify(syncInfo), (err) => {
     if (err) return console.log('Error saving sync token:', err);
   });
 }
 
-let lastSyncDate;
+/**
+ * Save queue to file.
+ */
+function saveQueue() {
+  syncInfo.upQueue = queue;
+  fs.writeFileSync(syncInfoPath, JSON.stringify(syncInfo), (err) => {
+    if (err) return console.log('Error saving upQueue:', err);
+  });
+}
 
 /**
  * Sync down events from gcal.
@@ -252,15 +282,15 @@ async function syncDown() {
   const initialParams = [calendar];
 
   // First check if we have a sync token and if so use it
-  if (fs.existsSync(syncTokenPath)) {
+  if (fs.existsSync(syncInfoPath)) {
     try {
-      const parsedContents = JSON.parse(fs.readFileSync(syncTokenPath));
-      const syncToken = parsedContents.syncToken;
+      syncInfo = JSON.parse(fs.readFileSync(syncInfoPath));
+      const syncToken = syncInfo.syncToken;
       if (syncToken) {
         initialParams.push(syncToken);
         console.log('sync token', syncToken);
 
-        lastSyncDate = new Date(parsedContents.date);
+        lastSyncDate = new Date(syncInfo.date);
       } else {
         initialParams.push(null);
       }
@@ -290,4 +320,109 @@ async function syncDown() {
 
   console.log('done?');
   saveSave();
+}
+
+/**
+ * Sync up new, deleted, or updated timers to gcal.
+ */
+async function syncUp() {
+  const calendar = await getCalendar();
+  for (const [index, entry] of queue.entries()) {
+    for (const [change, timer] of Object.entries(entry)) {
+      if (change === 'delete') {
+        console.log(`sync up delete: ${timer.id} - ${timer.title}`);
+        calendar.events.delete(
+          {calendarId: 'primary', eventId: timer.id}, (err, res) => {
+            if (err) {
+              console.log(`The API returned an error\
+ while calling events.delete: ${err}`);
+              // 410 error means the event was already deleted on server, so we
+              //  need to remove it from queue so do not return in that case.
+              if (err.code !== 410) return;
+            }
+            removeFromQueue(index);
+          });
+      } else if (change === 'new') {
+        console.log(`sync up new: ${timer.id} - ${timer.title}`);
+        const event = {
+          summary: timer.title,
+          description: timer.description,
+          start: {dateTime: timer.start},
+          end: {dateTime: timer.end},
+        };
+        calendar.events.insert(
+          {calendarId: 'primary', resource: event}, (err, res) => {
+            if (err) return console.log(
+              `The API returned an error while calling events.insert: ${err}`);
+            console.log(res.data);
+            // Update the object to have the new gcal id
+            timer.id = res.data.id;
+            saveSave();
+            removeFromQueue(index);
+          });
+      } else if (change === 'update') {
+        console.log(`sync up update: ${timer.id} - ${timer.title}`);
+        // Get and update existing event
+        calendar.events.get(
+          {calendarId: 'primary', eventId: timer.id}, (err, res) => {
+            if (err) return console.log(
+              `The API returned an error while calling events.get: ${err}`);
+            const event = res.data;
+            event.summary = timer.title || event.summary;
+            event.description = timer.description || event.description;
+            event.start = {dateTime: timer.start};
+            event.end = {dateTime: timer.end};
+            calendar.events.update(
+              {calendarId: 'primary', eventId: timer.id, resource: event}
+              , (err, res) => {
+                if (err) return console.log(
+                  `'The API returned an error\
+ while calling events.update: ${err}`);
+                console.log(res.data);
+                removeFromQueue(index);
+              });
+          });
+      }
+    }
+  }
+}
+
+/**
+ * Add required gcal change to queue.
+ * @param {String} typeOfChange : update, delete
+ * @param {Object} timer
+ */
+function addToQueue(typeOfChange, timer) {
+  console.log('queue', queue);
+  // Only keep latest
+  let staleUpdateIndex = -1;
+  do {
+    staleUpdateIndex = queue.findIndex(((t) =>
+      t[typeOfChange].id === timer.id));
+    if (staleUpdateIndex !== -1) {
+      queue.splice(staleUpdateIndex, 1);
+    }
+  } while (staleUpdateIndex !== -1);
+
+  // Not on gcal yet, so if delete ignore, otherwise new
+  if (timer.id.length === 21) {
+    if (typeOfChange === 'delete') {
+      return;
+    } else {
+      queue.push({'new': timer});
+      return;
+    }
+  }
+
+  queue.push({[typeOfChange]: timer});
+  saveQueue();
+}
+
+/**
+ * Remove entry from up sync queue.
+ * @param {Integer} index of entry to remove
+ */
+function removeFromQueue(index) {
+  queue.splice(index, 1);
+  saveQueue();
 }
