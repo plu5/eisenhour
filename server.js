@@ -190,14 +190,14 @@ app.post('/timerDelete', (req, res) => {
   saveSave();
 });
 
-app.post('/events', (req, res) => {
-  syncDown();
-  res.send({blah: 'blah'});
+app.post('/syncDown', async (req, res) => {
+  await syncDown();
+  res.send(currentTimers);
 });
 
-app.post('/syncUp', (req, res) => {
-  syncUp();
-  res.send({blah: 'blah'});
+app.post('/syncUp', async (req, res) => {
+  await syncUp();
+  res.send(currentTimers);
 });
 
 /**
@@ -318,8 +318,75 @@ async function syncDown() {
     }
   } while (nextPageToken);
 
-  console.log('done?');
   saveSave();
+  return console.log('done syncDown');
+}
+
+/**
+ * Delete timer’s corresponding gcal event from calendar.
+ * @param {Object} calendar
+ * @param {Object} timer
+ */
+async function deleteEvent(calendar, timer) {
+  return new Promise((resolve, reject) => {
+    calendar.events.delete(
+      {calendarId: 'primary', eventId: timer.id}, (err, res) => {
+        if (err) reject(err);
+        resolve(console.log(`deleteEvent ${timer.id}`));
+      });
+  });
+}
+
+/**
+ * Add a corresponding gcal event for timer to calendar. Change timer’s id
+ *  to match the new event id.
+ * @param {Object} calendar
+ * @param {Object} timer
+ */
+function insertEvent(calendar, timer) {
+  return new Promise((resolve, reject) => {
+    const event = {
+      summary: timer.title,
+      description: timer.description,
+      start: {dateTime: timer.start},
+      end: {dateTime: timer.end},
+    };
+    calendar.events.insert(
+      {calendarId: 'primary', resource: event}, (err, res) => {
+        if (err) reject(err);
+        console.log(res.data);
+        // Update the object to have the new gcal id
+        timer.id = res.data.id;
+        saveSave();
+        resolve(console.log(`insertEvent ${timer.id}`));
+      });
+  });
+}
+
+/**
+ * Update timer’s corresponding gcal event on calendar to match timer.
+ * @param {Object} calendar
+ * @param {Object} timer
+ */
+async function updateEvent(calendar, timer) {
+  return new Promise((resolve, reject) => {
+    // Get and update existing event
+    calendar.events.get(
+      {calendarId: 'primary', eventId: timer.id}, (err, res) => {
+        if (err) reject(err);
+        const event = res.data;
+        event.summary = timer.title || event.summary;
+        event.description = timer.description || event.description;
+        event.start = {dateTime: timer.start};
+        event.end = {dateTime: timer.end};
+        calendar.events.update(
+          {calendarId: 'primary', eventId: timer.id, resource: event}
+          , (err, res) => {
+            if (err) reject(err);
+            resolve(console.log(`updateEvent ${res.data}`));
+          });
+      });
+  });
 }
 
 /**
@@ -331,60 +398,39 @@ async function syncUp() {
     for (const [change, timer] of Object.entries(entry)) {
       if (change === 'delete') {
         console.log(`sync up delete: ${timer.id} - ${timer.title}`);
-        calendar.events.delete(
-          {calendarId: 'primary', eventId: timer.id}, (err, res) => {
-            if (err) {
-              console.log(`The API returned an error\
- while calling events.delete: ${err}`);
-              // 410 error means the event was already deleted on server, so we
-              //  need to remove it from queue so do not return in that case.
-              if (err.code !== 410) return;
-            }
-            removeFromQueue(index);
-          });
+        try {
+          await deleteEvent(calendar, timer);
+        } catch (err) {
+          console.log(`The API returned an error\
+ // while calling events.delete: ${err}`);
+          // 410 error means the event was already deleted on server, so we
+          //  need to remove it from queue so do not return in that case.
+          if (err.code !== 410) return;
+        }
+        removeFromQueue(index);
       } else if (change === 'new') {
         console.log(`sync up new: ${timer.id} - ${timer.title}`);
-        const event = {
-          summary: timer.title,
-          description: timer.description,
-          start: {dateTime: timer.start},
-          end: {dateTime: timer.end},
-        };
-        calendar.events.insert(
-          {calendarId: 'primary', resource: event}, (err, res) => {
-            if (err) return console.log(
-              `The API returned an error while calling events.insert: ${err}`);
-            console.log(res.data);
-            // Update the object to have the new gcal id
-            timer.id = res.data.id;
-            saveSave();
-            removeFromQueue(index);
-          });
+        try {
+          await insertEvent(calendar, timer);
+        } catch (err) {
+          return console.log(
+            `The API returned an error while calling events.insert: ${err}`);
+        }
+        removeFromQueue(index);
       } else if (change === 'update') {
         console.log(`sync up update: ${timer.id} - ${timer.title}`);
-        // Get and update existing event
-        calendar.events.get(
-          {calendarId: 'primary', eventId: timer.id}, (err, res) => {
-            if (err) return console.log(
-              `The API returned an error while calling events.get: ${err}`);
-            const event = res.data;
-            event.summary = timer.title || event.summary;
-            event.description = timer.description || event.description;
-            event.start = {dateTime: timer.start};
-            event.end = {dateTime: timer.end};
-            calendar.events.update(
-              {calendarId: 'primary', eventId: timer.id, resource: event}
-              , (err, res) => {
-                if (err) return console.log(
-                  `'The API returned an error\
- while calling events.update: ${err}`);
-                console.log(res.data);
-                removeFromQueue(index);
-              });
-          });
+        try {
+          await updateEvent(calendar, timer);
+        } catch (err) {
+          // FIXME
+          return console.log(`The API returned an error\
+ while calling events.get or events.update: ${err}`);
+        }
+        removeFromQueue(index);
       }
     }
   }
+  return console.log('done syncUp');
 }
 
 /**
@@ -393,7 +439,6 @@ async function syncUp() {
  * @param {Object} timer
  */
 function addToQueue(typeOfChange, timer) {
-  console.log('queue', queue);
   // Only keep latest
   let staleUpdateIndex = -1;
   do {

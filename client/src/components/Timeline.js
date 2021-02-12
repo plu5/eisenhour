@@ -42,12 +42,12 @@ function Timeline() {
   }
 
   async function syncDown() {
-    const response = await fetch('events', {
+    const response = await fetch('syncDown', {
       method: 'post',
       body: JSON.stringify({}),
       headers: {'Content-Type': 'application/json'},
     });
-    // setTimers(await jsonToTimersArray(response));
+    setTimers(await jsonToTimersArray(response));
   }
 
   async function syncUp() {
@@ -56,7 +56,7 @@ function Timeline() {
       body: JSON.stringify({}),
       headers: {'Content-Type': 'application/json'},
     });
-    // setTimers(await jsonToTimersArray(response));
+    setTimers(await jsonToTimersArray(response));
   }
 
   return (
