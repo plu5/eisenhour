@@ -262,7 +262,8 @@ function eventsToData(events) {
       const updateDate = new Date(event.updated);
       if (lastSyncDate && (updateDate > lastSyncDate)) {
         Object.assign(existingTimer, newEventData);
-        console.log('eventsToData: updated event');
+        console.log(`eventsToData: updated event ${newEventData.id} -\
+ ${newEventData.title}`);
       }
     } else {
       // If new
@@ -379,7 +380,6 @@ function insertEvent(calendar, timer) {
         console.log(res.data);
         // Update the object to have the new gcal id
         timer.id = res.data.id;
-        saveSave();
         resolve(console.log(`insertEvent ${timer.id}`));
       });
   });
@@ -468,6 +468,7 @@ async function syncUp() {
   });
 
   await settle();
+  saveSave();
   return console.log('done syncUp');
 }
 
@@ -482,8 +483,8 @@ function addToQueue(typeOfChange, timer) {
   let staleUpdateIndex = -1;
   do {
     staleUpdateIndex = queue.findIndex((entry) => {
-      if (!entry[typeOfChange]) return false;
-      return entry[typeOfChange].id === timer.id;
+      if (!Object.values(entry)[0]) return false;
+      return Object.values(entry)[0].id === timer.id;
     });
     if (staleUpdateIndex !== -1) {
       queue.splice(staleUpdateIndex, 1);
