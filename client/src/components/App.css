@@ -59,6 +59,8 @@ body
   background: none;
   border: none;
   color: #6a6a6a;
+  text-align: left;
+  width: 350px;
 }
 
 .start-time, .end-time {

@@ -190,6 +190,17 @@ app.post('/timerDelete', (req, res) => {
   saveSave();
 });
 
+app.post('/timerDuplicate', (req, res) => {
+  const p = req.body;
+  const duplicateTimer = {id: nanoid(), title: p.title,
+                          description: p.description,
+                          start: new Date()};
+  currentTimers.push(duplicateTimer);
+  res.send({duplicated: p.id, as: duplicateTimer.id});
+  console.log('new (duplicate):', currentTimers[currentTimers.length - 1]);
+  saveSave();
+});
+
 app.post('/syncDown', async (req, res) => {
   await syncDown();
   res.send(currentTimers);

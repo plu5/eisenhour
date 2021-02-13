@@ -198,6 +198,22 @@ function Timer(props) {
       });
   }
 
+  /**
+   * Duplicate self
+   */
+  function duplicate() {
+    fetch('timerDuplicate', {
+      method: 'post',
+      body: JSON.stringify(data),
+      headers: {'Content-Type': 'application/json'},
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        console.log(json);
+        props.update();
+      });
+  }
+
   return (
     <div className="timer">
       {/* title */}
@@ -220,12 +236,17 @@ function Timer(props) {
              {elapsed}
            </span>
            {isRunning ?
-            <button onClick={stop}>
-              ⏹ stop
+            <button title="stop" onClick={stop}>
+              ⏹
             </button> :
-            <button onClick={restart}>
-              ▶ restart
-            </button>
+            <>
+              <button title="restart" onClick={restart}>
+                ▶
+              </button>
+              <button title="resume as new" onClick={duplicate}>
+                +
+              </button>
+            </>
            }
          </>
         }
