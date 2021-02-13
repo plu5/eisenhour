@@ -398,7 +398,6 @@ async function updateEvent(calendar, timer) {
  */
 async function syncUp() {
   const calendar = await getCalendar();
-
   const promises = queue.map((entry, index) => {
     const [change, timer] = Object.entries(entry)[0];
     return new Promise((resolve, reject) => {
@@ -439,7 +438,7 @@ async function syncUp() {
     });
   });
 
-  Promise.allSettled(promises).then((results) => {
+  const settle = () => Promise.allSettled(promises).then((results) => {
     // These are the indices for the entries we need to remove from the
     //  queue. The reason for sorting in reverse order is because otherwise each
     //  entry removed from the queue would affect the indices of the other ones.
@@ -448,7 +447,10 @@ async function syncUp() {
     );
     indices.sort((a, b) => b - a);
     for (const index of indices) removeFromQueue(index);
-  }).then((v) => console.log('done syncUp'));
+  });
+
+  await settle();
+  return console.log('done syncUp');
 }
 
 /**
