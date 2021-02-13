@@ -247,20 +247,27 @@ function eventsToData(events) {
       dueForDeletion.push(event.id);
       continue;
     }
-    // If update to an event we already have
-    const updateDate = new Date(event.updated);
-    if (lastSyncDate && (updateDate > lastSyncDate)) {
-      dueForDeletion.push(event.id);
-    }
     const start = new Date(event.start.dateTime);
     const dayArray = getSaveDayArray(...getYearMonthDay(start));
-    dayArray.push({
+    const newEventData = {
       id: event.id,
       start,
       end: new Date(event.end.dateTime),
       title: event.summary,
       description: event.description || '',
-    });
+    };
+    const existingTimer = dayArray.find((t) => t.id === event.id);
+    // If update to an event we already have
+    if (existingTimer) {
+      const updateDate = new Date(event.updated);
+      if (lastSyncDate && (updateDate > lastSyncDate)) {
+        Object.assign(existingTimer, newEventData);
+        console.log('eventsToData: updated event');
+      }
+    } else {
+      // If new
+      dayArray.push(newEventData);
+    }
   }
   for (const id of dueForDeletion) tryDeleteTimerFromSave(id);
 }
