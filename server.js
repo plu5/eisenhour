@@ -228,19 +228,18 @@ async function getEvents(calendar, syncToken, pageToken) {
  * @param {Array} events
  */
 function eventsToData(events) {
+  const dueForDeletion = [];
   for (const event of events) {
     // If deleted
     if (event.status === 'cancelled') {
       console.log('eventsToData: event.status cancelled');
-      tryDeleteTimerFromSave(event.id);
-      saveSave();
+      dueForDeletion.push(event.id);
       continue;
     }
     // If update to an event we already have
     const updateDate = new Date(event.updated);
     if (updateDate > lastSyncDate) {
-      tryDeleteTimerFromSave(event.id);
-      saveSave();
+      dueForDeletion.push(event.id);
     }
     const start = new Date(event.start.dateTime);
     const dayArray = getSaveDayArray(...getYearMonthDay(start));
@@ -252,6 +251,7 @@ function eventsToData(events) {
       description: event.details || '',
     });
   }
+  for (const id of dueForDeletion) tryDeleteTimerFromSave(id);
 }
 
 /**
