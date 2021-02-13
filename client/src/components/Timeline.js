@@ -66,7 +66,10 @@ function Timeline() {
       <button onClick={syncUp}>sync up</button>
       <Timebar addTimer={addTimer}/>
       {timers.map((t, i) => (
-        <Timer {...t} update={update} key={t.id}/>
+        // Setting key to be a combination of all the timer data because that
+        //  way it will re-render the component when an update from the server
+        //  caused e.g. only the title to change.
+        <Timer {...t} update={update} key={Object.values(t).join()}/>
       ))}
     </div>
   );
