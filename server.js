@@ -238,7 +238,7 @@ function eventsToData(events) {
     }
     // If update to an event we already have
     const updateDate = new Date(event.updated);
-    if (updateDate > lastSyncDate) {
+    if (lastSyncDate && (updateDate > lastSyncDate)) {
       dueForDeletion.push(event.id);
     }
     const start = new Date(event.start.dateTime);
