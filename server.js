@@ -248,7 +248,7 @@ function eventsToData(events) {
       start,
       end: new Date(event.end.dateTime),
       title: event.summary,
-      description: event.details || '',
+      description: event.description || '',
     });
   }
   for (const id of dueForDeletion) tryDeleteTimerFromSave(id);
