@@ -231,13 +231,16 @@ function eventsToData(events) {
   for (const event of events) {
     // If deleted
     if (event.status === 'cancelled') {
+      console.log('eventsToData: event.status cancelled');
       tryDeleteTimerFromSave(event.id);
-      break;
+      saveSave();
+      continue;
     }
     // If update to an event we already have
     const updateDate = new Date(event.updated);
     if (updateDate > lastSyncDate) {
       tryDeleteTimerFromSave(event.id);
+      saveSave();
     }
     const start = new Date(event.start.dateTime);
     const dayArray = getSaveDayArray(...getYearMonthDay(start));
@@ -342,6 +345,7 @@ async function deleteEvent(calendar, timer) {
  *  to match the new event id.
  * @param {Object} calendar
  * @param {Object} timer
+ * @return {Promise}
  */
 function insertEvent(calendar, timer) {
   return new Promise((resolve, reject) => {
@@ -394,43 +398,57 @@ async function updateEvent(calendar, timer) {
  */
 async function syncUp() {
   const calendar = await getCalendar();
-  for (const [index, entry] of queue.entries()) {
-    for (const [change, timer] of Object.entries(entry)) {
+
+  const promises = queue.map((entry, index) => {
+    const [change, timer] = Object.entries(entry)[0];
+    return new Promise((resolve, reject) => {
       if (change === 'delete') {
         console.log(`sync up delete: ${timer.id} - ${timer.title}`);
-        try {
-          await deleteEvent(calendar, timer);
-        } catch (err) {
-          console.log(`The API returned an error\
- // while calling events.delete: ${err}`);
-          // 410 error means the event was already deleted on server, so we
-          //  need to remove it from queue so do not return in that case.
-          if (err.code !== 410) return;
-        }
-        removeFromQueue(index);
+        deleteEvent(calendar, timer)
+          .then((v) => resolve(index))
+          .catch((e) => {
+            console.log(`The API returned an error\
+ while calling events.delete: ${e}`);
+            if (e.code !== 410) {
+              reject(e);
+            } else {
+              // 410 error means the event was already deleted on server, so we
+              //  need to remove it from queue so do not return in that case.
+              resolve(index);
+            }
+          });
       } else if (change === 'new') {
         console.log(`sync up new: ${timer.id} - ${timer.title}`);
-        try {
-          await insertEvent(calendar, timer);
-        } catch (err) {
-          return console.log(
-            `The API returned an error while calling events.insert: ${err}`);
-        }
-        removeFromQueue(index);
+        insertEvent(calendar, timer)
+          .then((v) => resolve(index))
+          .catch((e) => {
+            console.log(
+              `The API returned an error while calling events.insert: ${e}`);
+            reject(e);
+          });
       } else if (change === 'update') {
         console.log(`sync up update: ${timer.id} - ${timer.title}`);
-        try {
-          await updateEvent(calendar, timer);
-        } catch (err) {
-          // FIXME
-          return console.log(`The API returned an error\
- while calling events.get or events.update: ${err}`);
-        }
-        removeFromQueue(index);
+        updateEvent(calendar, timer)
+          .then((v) => resolve(index))
+          .catch((e) => {
+            console.log(`The API returned an error\
+ while calling events.get or events.update: ${e}`);
+            reject(e);
+          });
       }
-    }
-  }
-  return console.log('done syncUp');
+    });
+  });
+
+  Promise.allSettled(promises).then((results) => {
+    // These are the indices for the entries we need to remove from the
+    //  queue. The reason for sorting in reverse order is because otherwise each
+    //  entry removed from the queue would affect the indices of the other ones.
+    const indices = results.flatMap((result) =>
+      (result.status === 'fulfilled') ? [result.value] : []
+    );
+    indices.sort((a, b) => b - a);
+    for (const index of indices) removeFromQueue(index);
+  }).then((v) => console.log('done syncUp'));
 }
 
 /**
@@ -439,11 +457,14 @@ async function syncUp() {
  * @param {Object} timer
  */
 function addToQueue(typeOfChange, timer) {
-  // Only keep latest
+  // Only keep latest (remove all previous change entries to same timer of same
+  //  typeOfChange)
   let staleUpdateIndex = -1;
   do {
-    staleUpdateIndex = queue.findIndex(((t) =>
-      t[typeOfChange].id === timer.id));
+    staleUpdateIndex = queue.findIndex((entry) => {
+      if (!entry[typeOfChange]) return false;
+      return entry[typeOfChange].id === timer.id;
+    });
     if (staleUpdateIndex !== -1) {
       queue.splice(staleUpdateIndex, 1);
     }
@@ -455,6 +476,7 @@ function addToQueue(typeOfChange, timer) {
       return;
     } else {
       queue.push({'new': timer});
+      saveQueue();
       return;
     }
   }
