@@ -48,13 +48,13 @@ function Timer(props) {
   }, [firstRenderRef]);
 
   /**
-   * Start timer, saving start time
+   * Start timer, saving start time and resetting end time
    */
-  function start() {
+  function restart() {
     const now = new Date();
-    setData({...data, start: now});
-    setDisplayTimes({...displayTimes, start: getDisplayTime(now)});
-    setEditValues({...editValues, start: getDisplayTime(now)});
+    setData({...data, start: now, end: null});
+    setDisplayTimes({...displayTimes, start: getDisplayTime(now), end: ''});
+    setEditValues({...editValues, start: getDisplayTime(now), end: ''});
     setIsRunning(true);
   }
 
@@ -223,8 +223,8 @@ function Timer(props) {
             <button onClick={stop}>
               ⏹ stop
             </button> :
-            <button onClick={start}>
-              ▶ start
+            <button onClick={restart}>
+              ▶ restart
             </button>
            }
          </>
