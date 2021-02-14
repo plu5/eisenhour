@@ -96,9 +96,28 @@ function getSaveKeysAndVerifyStructureFor(year, month, day) {
  * @param {Integer} day
  * @return {Array} array of timers for given save day
  */
-function getSaveDayArray(year, month, day) {
+function getDayArray(year, month, day) {
   const [y, m, d] = getSaveKeysAndVerifyStructureFor(year, month, day);
   return save[y][m][d];
+}
+
+/**
+ * Return day array of timer with given id, or false if not found.
+ * @param {String} id
+ * @return {Array} dayArray if found, {Bool} false if not found.
+ */
+function getDayArrayById(id) {
+  for (const [, year] of Object.entries(save)) {
+    for (const [, month] of Object.entries(year)) {
+      for (const [, dayArray] of Object.entries(month)) {
+        const index = dayArray.findIndex((t) => t.id === id);
+        if (index !== -1) {
+          return dayArray;
+        }
+      }
+    }
+  }
+  return false;
 }
 
 /**
@@ -109,7 +128,7 @@ function getSaveDayArray(year, month, day) {
  * @return {Array} currentTimers
  */
 function updateCurrentTimers(year, month, day) {
-  currentTimers = getSaveDayArray(year, month, day);
+  currentTimers = getDayArray(year, month, day);
   return currentTimers;
 }
 
@@ -165,31 +184,12 @@ function tryDeleteObject(id, array) {
 }
 
 /**
- * Return day array of timer with given id, or false if not found.
- * @param {String} id
- * @return {Array} dayArray if found, {Bool} false if not found.
- */
-function getDayArrayOf(id) {
-  for (const [, year] of Object.entries(save)) {
-    for (const [, month] of Object.entries(year)) {
-      for (const [, dayArray] of Object.entries(month)) {
-        const index = dayArray.findIndex((t) => t.id === id);
-        if (index !== -1) {
-          return dayArray;
-        }
-      }
-    }
-  }
-  return false;
-}
-
-/**
  * Attempt to delete timer with given id from the entire save.
  * @param {String} id
  * @return {Bool} true if object was deleted, false if not found.
  */
 function tryDeleteTimerFromSave(id) {
-  const dayArray = getDayArrayOf(id);
+  const dayArray = getDayArrayById(id);
   if (dayArray) if (tryDeleteObject(id, dayArray)) return true;
   return false;
 }
@@ -200,7 +200,7 @@ function tryDeleteTimerFromSave(id) {
  * @return {Object} timer if found, {Bool} false if not found.
  */
 function findTimer(id) {
-  const dayArray = getDayArrayOf(id);
+  const dayArray = getDayArrayById(id);
   if (dayArray) {
     const timer = dayArray.find((t) => t.id === id);
     if (timer) return true;
@@ -274,7 +274,7 @@ function eventsToData(events) {
       continue;
     }
     const start = new Date(event.start.dateTime);
-    const dayArray = getSaveDayArray(...getYearMonthDay(start));
+    const dayArray = getDayArray(...getYearMonthDay(start));
     const newEventData = {
       id: event.id,
       start,
