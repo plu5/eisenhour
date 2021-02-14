@@ -177,7 +177,6 @@ function tryDeleteObject(id, array) {
     array.splice(index, 1);
     return true;
   } else {
-    // console.log(`tryDeleteTimer failed; couldn’t find timer with id ${id}`);
     return false;
   }
 }
@@ -202,7 +201,7 @@ function findTimer(id) {
   const dayArray = getDayArrayById(id);
   if (dayArray) {
     const timer = dayArray.find((t) => t.id === id);
-    if (timer) return true;
+    if (timer) return timer;
   }
   return false;
 }
@@ -263,36 +262,24 @@ async function getEvents(calendar, syncToken, pageToken) {
  * Put events from gcal into our data.
  * @param {Array} events
  */
-function eventsToData(events) {
-  const dueForDeletion = [];
+function storeNewEvents(events) {
   for (const event of events) {
-    // If deleted
+    // I know.
+    tryDeleteTimerFromSave(event.id);
     if (event.status === 'cancelled') {
-      console.log('eventsToData: event.status cancelled');
-      dueForDeletion.push(event.id);
+      console.log('storeNewEvents: event.status cancelled');
       continue;
     }
     const start = new Date(event.start.dateTime);
     const dayArray = getDayArray(...getYearMonthDay(start));
-    const newEventData = {
+    dayArray.push({
       id: event.id,
       start,
       end: new Date(event.end.dateTime),
       title: event.summary,
       description: event.description || '',
-    };
-    const existingTimer = findTimer(event.id);
-    // If update to an event we already have
-    if (existingTimer) {
-      Object.assign(existingTimer, newEventData);
-      console.log(`eventsToData: updated event ${newEventData.id} -\
- ${newEventData.title}`);
-    } else {
-      // If new
-      dayArray.push(newEventData);
-    }
+    });
   }
-  for (const id of dueForDeletion) tryDeleteTimerFromSave(id);
 }
 
 /**
@@ -350,7 +337,7 @@ async function syncDown() {
     const params = [...initialParams];
     if (nextPageToken) params.push(nextPageToken);
     const res = await getEvents(...params);
-    eventsToData(res.data.items);
+    storeNewEvents(res.data.items);
     if (res.data.nextSyncToken) saveSyncToken(res.data.nextSyncToken);
     if (res.data.nextPageToken) {
       nextPageToken = res.data.nextPageToken;
