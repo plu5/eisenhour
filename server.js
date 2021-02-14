@@ -34,7 +34,6 @@ let save = null;
 const saveFilePath = 'save.json';
 const syncInfoPath = 'syncInfo.json';
 let syncInfo = null;
-let lastSyncDate = null;
 let queue = [];
 
 // Load save, create if doesn’t exist
@@ -285,12 +284,9 @@ function eventsToData(events) {
     const existingTimer = findTimer(event.id);
     // If update to an event we already have
     if (existingTimer) {
-      const updateDate = new Date(event.updated);
-      if (lastSyncDate && (updateDate > lastSyncDate)) {
-        Object.assign(existingTimer, newEventData);
-        console.log(`eventsToData: updated event ${newEventData.id} -\
+      Object.assign(existingTimer, newEventData);
+      console.log(`eventsToData: updated event ${newEventData.id} -\
  ${newEventData.title}`);
-      }
     } else {
       // If new
       dayArray.push(newEventData);
@@ -300,7 +296,8 @@ function eventsToData(events) {
 }
 
 /**
- * Save syncToken to file + date of sync.
+ * Save syncToken to file + date of sync (though right now the date is not used
+ *  for anything).
  * @param {String} syncToken
  */
 function saveSyncToken(syncToken) {
@@ -337,8 +334,6 @@ async function syncDown() {
       if (syncToken) {
         initialParams.push(syncToken);
         console.log('sync token', syncToken);
-
-        lastSyncDate = new Date(syncInfo.date);
       } else {
         initialParams.push(null);
       }
