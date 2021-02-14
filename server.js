@@ -165,19 +165,45 @@ function tryDeleteObject(id, array) {
 }
 
 /**
+ * Return day array of timer with given id, or false if not found.
+ * @param {String} id
+ * @return {Array} dayArray if found, {Bool} false if not found.
+ */
+function getDayArrayOf(id) {
+  for (const [, year] of Object.entries(save)) {
+    for (const [, month] of Object.entries(year)) {
+      for (const [, dayArray] of Object.entries(month)) {
+        const index = dayArray.findIndex((t) => t.id === id);
+        if (index !== -1) {
+          return dayArray;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+/**
  * Attempt to delete timer with given id from the entire save.
  * @param {String} id
  * @return {Bool} true if object was deleted, false if not found.
  */
 function tryDeleteTimerFromSave(id) {
-  for (const [, year] of Object.entries(save)) {
-    for (const [, month] of Object.entries(year)) {
-      for (const [, day] of Object.entries(month)) {
-        if (tryDeleteObject(id, day)) {
-          return true;
-        }
-      }
-    }
+  const dayArray = getDayArrayOf(id);
+  if (dayArray) if (tryDeleteObject(id, dayArray)) return true;
+  return false;
+}
+
+/**
+ * Return timer with given id, or false if not found.
+ * @param {String} id
+ * @return {Object} timer if found, {Bool} false if not found.
+ */
+function findTimer(id) {
+  const dayArray = getDayArrayOf(id);
+  if (dayArray) {
+    const timer = dayArray.find((t) => t.id === id);
+    if (timer) return true;
   }
   return false;
 }
@@ -256,7 +282,7 @@ function eventsToData(events) {
       title: event.summary,
       description: event.description || '',
     };
-    const existingTimer = dayArray.find((t) => t.id === event.id);
+    const existingTimer = findTimer(event.id);
     // If update to an event we already have
     if (existingTimer) {
       const updateDate = new Date(event.updated);
