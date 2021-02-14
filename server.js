@@ -120,6 +120,19 @@ function getDayArrayById(id) {
 }
 
 /**
+ * Sort array by start time. Sorts in place but also returns the array.
+ * @param {Array} array
+ * @return {Array}
+ */
+function sortArrayByStart(array) {
+  return array.sort((a, b) => {
+    if (a.start < b.start) return -1;
+    if (a.start > b.start) return 1;
+    return 0;
+  });
+} 
+
+/**
  * Update currentTimers to array in save.year.month.day and return it.
  * @param {Integer} year
  * @param {Integer} month
@@ -127,7 +140,7 @@ function getDayArrayById(id) {
  * @return {Array} currentTimers
  */
 function updateCurrentTimers(year, month, day) {
-  currentTimers = getDayArray(year, month, day);
+  currentTimers = sortArrayByStart(getDayArray(year, month, day));
   return currentTimers;
 }
 
