@@ -10,7 +10,7 @@ import './react-datepicker.css';
  * @return {jsx}
  */
 function DaySelector(props) {
-  const [today,] = useState(new Date());
+  const [today,] = useState(new Date()); // eslint-disable-line
   const [date, setDate] = useState(props.date);
   const update = useRef(props.update);
 
@@ -47,12 +47,13 @@ function DaySelector(props) {
                   showWeekNumbers
                   maxDate={today}
                   popperContainer={
-                    ({children}) => createPortal(children,document.body)}
+                    ({children}) => createPortal(children, document.body)}
                   todayButton="→ today"/>
-      {today.toDateString() === date.toDateString() ?
-       <></> :
-       <button onClick={() => addDays(1)}>&gt;</button>
-      }
+      <button onClick={() => addDays(1)}
+              disabled={today.toDateString() === date.toDateString() ?
+                        true : false}>
+        &gt;
+      </button>
     </div>
   );
 }

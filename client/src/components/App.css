@@ -32,6 +32,10 @@ body
   margin-right: auto;
 }
 
+.timebar {
+  text-align: center;
+}
+
 .timer {
   border-top: outset;
   padding: 5px;
@@ -75,6 +79,14 @@ body
 
 .running {
   color: green;
+}
+
+.sync {
+  float: right;
+}
+
+.day-selector {
+  float: left;
 }
 
 .react-datepicker__input-container input {

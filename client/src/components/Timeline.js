@@ -62,8 +62,10 @@ function Timeline() {
   return (
     <div className="timeline">
       <DaySelector date={new Date(day.split('-'))} update={updateDay}/>
-      <button onClick={syncDown}>sync down</button>
-      <button onClick={syncUp}>sync up</button>
+      <div className="sync">
+        <button onClick={syncDown}>sync down</button>
+        <button onClick={syncUp}>sync up</button>
+      </div>
       <Timebar addTimer={addTimer}/>
       {timers.map((t, i) => (
         // Setting key to be a combination of all the timer data because that
