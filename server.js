@@ -399,9 +399,7 @@ function insertEvent(calendar, timer) {
       {calendarId: 'primary', resource: event}, (err, res) => {
         if (err) reject(err);
         console.log(res.data);
-        // Update the object to have the new gcal id
-        timer.id = res.data.id;
-        resolve(console.log(`insertEvent ${timer.id}`));
+        resolve(res.data.id);
       });
   });
 }
@@ -458,7 +456,10 @@ async function syncUp() {
       } else if (change === 'new') {
         console.log(`sync up new: ${timer.id} - ${timer.title}`);
         insertEvent(calendar, timer)
-          .then((v) => resolve(index))
+          .then((v) => {
+            timer.id = v;
+            resolve(index);
+          })
           .catch((e) => {
             console.log(
               `The API returned an error while calling events.insert: ${e}`);
