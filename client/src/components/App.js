@@ -1,7 +1,7 @@
 import React from 'react';
 
 import './App.css';
-import Timeline from './Timeline';
+import Main from './Main';
 
 /**
  * React app
@@ -15,7 +15,7 @@ function App() {
       <div>
         <h1 style={{'textAlign': 'center'}}>Eisenhour</h1>
       </div>
-      <Timeline/>
+      <Main/>
     </>
   );
 }

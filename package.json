@@ -8,7 +8,8 @@
     "client": "node start-client.js"
   },
   "devDependencies": {
-    "concurrently": "^5.3.0"
+    "concurrently": "^5.3.0",
+    "jest": "^27.4.5"
   },
   "dependencies": {
     "express": "^4.17.1",
@@ -17,6 +18,7 @@
     "nanoid": "^3.1.20",
     "passport": "^0.4.1",
     "passport-google-oauth20": "^2.0.0",
+    "react-router-dom": "^6.2.1",
     "socket.io": "^2.3.0"
   },
   "jest": {

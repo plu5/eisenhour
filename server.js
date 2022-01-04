@@ -4,6 +4,7 @@ const nanoid = require('nanoid').nanoid;
 const bodyParser = require('body-parser');
 
 const authentication = require('./authentication');
+const statistics = require('./statistics');
 
 // Set up express and io
 const app = module.exports.app = express();
@@ -130,7 +131,7 @@ function sortArrayByStart(array) {
     if (a.start > b.start) return 1;
     return 0;
   });
-} 
+}
 
 /**
  * Update currentTimers to array in save.year.month.day and return it.
@@ -536,3 +537,15 @@ function removeFromQueue(index) {
   queue.splice(index, 1);
   saveQueue();
 }
+
+app.get('/statistics/:year', (req, res) => {
+  const p = req.params;
+  // TODO: Not hardcode this
+  const myMatchers = {'dev/cs': ['^dev:', '^cs:'], 'contrib': ['^contrib:'],
+                      'game': ['^game:', '^g:'], 'film': ['^film:'],
+                      'other watch': ['^w:', '^watch:'], 'maths': ['^maths:'],
+                      'read': ['^read:'], 'ar': ['^ar:']};
+  const tallies = statistics.talliesForYear(p.year, save, myMatchers);
+  console.log(tallies);
+  res.send(tallies);
+});
