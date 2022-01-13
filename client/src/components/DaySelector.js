@@ -39,8 +39,35 @@ function DaySelector(props) {
     setDate(newDate);
   }
 
+  /**
+   * Scroll through days when scrolling the mousewheel
+   * @param {Object} event
+   */
+  function scroll(event) {
+    event.preventDefault();
+    if (event.deltaY > 0) {
+      if (today.toDateString() === date.toDateString()) return;
+      addDays(1);
+    } else {
+      addDays(-1);
+    }
+  }
+
+  // Workaround; attaching our onWheel function manually allows preventDefault
+  //  to work (prevent page scroll), where otherwise it would not
+  const selectorRef = useRef(null);
+  useEffect(() => {
+    if (selectorRef.current) {
+      const selectorDiv = selectorRef.current;
+      selectorDiv.addEventListener('wheel', scroll, {passive: false});
+      return () => {
+        selectorDiv.removeEventListener('wheel', scroll, {passive: false});
+      };
+    }
+  });
+
   return (
-    <div className="day-selector">
+    <div className="day-selector" ref={selectorRef}>
       <button onClick={() => addDays(-1)}>&lt;</button>
       <DatePicker dateFormat="yyyy-MM-dd" selected={date}
                   onChange={(date) => setDate(date)}
