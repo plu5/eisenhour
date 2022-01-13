@@ -1,5 +1,4 @@
 import React from 'react';
-import {BrowserRouter as Router, Routes, Route} from 'react-router-dom';
 
 import Timeline from './Timeline';
 import Statistics from './Statistics';
@@ -10,12 +9,18 @@ import Statistics from './Statistics';
  */
 function Main() {
   return (
-    <Router>
-      <Routes>
-        <Route path='/' element={<Timeline/>}></Route>
-        <Route path='statistics' element={<Statistics/>}></Route>
-      </Routes>
-    </Router>
+    <div className="container">
+      <div className="container__main">
+        <div className="container__left">
+        </div>
+        <div className="container__middle">
+          <Timeline/>
+        </div>
+        <div className="container__right">
+          <Statistics/>
+        </div>
+      </div>
+    </div>
   );
 }
 

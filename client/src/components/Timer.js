@@ -47,6 +47,20 @@ function Timer(props) {
     }
   }, [firstRenderRef]);
 
+  // to prevent content-jumping when editing
+  const [heights, setHeights] = useState({});
+  const titleRef = useRef(null);
+  const descriptionRef = useRef(null);
+
+  useEffect(() => {
+    setTimeout(() => {
+      if (titleRef.current) {
+        setHeights({'title': titleRef.current.clientHeight,
+                    'description': descriptionRef.current.clientHeight});
+      }
+    }, 0);
+  }, [data]);
+
   /**
    * Start timer, saving start time and resetting end time
    */
@@ -216,17 +230,44 @@ function Timer(props) {
 
   return (
     <div className="timer">
-      {/* title */}
+      <div className="name-section">
+        {/* title */}
+        {isEditing ?
+         <SubmittableInput name="title" value={editValues.title}
+                           title="title"
+                           onChange={handleEditValuesChange}
+                           onSubmit={handleSubmit}
+                           style={{height: heights.title + 'px'}}/> :
+         <span className="timer-title" ref={titleRef}>
+           {data.title}
+         </span>
+        }
+        <br/>
+        {/* description */}
+        {isEditing ?
+         <SubmittableInput name="description" value={editValues.description}
+                           title="description"
+                           multiline={true}
+                           onChange={handleEditValuesChange}
+                           onSubmit={handleSubmit}
+                           style={{height: heights.description < heights.title ?
+                                   heights.title - 1 + 'px' :
+                                   heights.description - 4.5 + 'px'}}/> :
+         <span className="timer-description" ref={descriptionRef}>
+           {data.description}
+         </span>
+        }
+      </div>
+
+      {/* edit button */}
       {isEditing ?
-       <SubmittableInput name="title" value={editValues.title}
-                         style={{width: editValues.title.length + 'ch'}}
-                         onChange={handleEditValuesChange}
-                         onSubmit={handleSubmit}/> :
-       <button className="timer-title"
-               onClick={() => setIsEditing(true)}>
-         {data.title}
-       </button>
-      }
+       <button className="edit-cancel-btn" onClick={handleCancel}>
+         <span role="img" aria-label="cancel" title="cancel">✖️</span>
+       </button>:
+       <button className="edit-btn" onClick={() => setIsEditing(true)}>
+         <span role="img" aria-label="edit" title="edit">✏️</span>
+       </button>}
+
       {/* elapsed & start/stop */}
       <div className="time-section">
         {isEditing ? <></> :
@@ -240,6 +281,7 @@ function Timer(props) {
               ⏹
             </button> :
             <>
+              {/* TODO: Add are you sure as this is destructive */}
               <button title="restart" onClick={restart}>
                 ▶
               </button>
@@ -258,17 +300,26 @@ function Timer(props) {
             <button onClick={selfDestruct}>v</button>
             <button onClick={() => setIsDeleting(false)}>x</button>
           </> :
-          <button className="delete-button" onClick={() => setIsDeleting(true)}>
+          <button className="delete-button"
+                  title="delete task"
+                  onClick={() => setIsDeleting(true)}>
             delete
           </button>) :
          <></>
         }
-        <br/>
         {isDeleting ? <></> :
          <div>
+           {/* edit confirm and cancel buttons */}
+           {isEditing ?
+            <>
+              <button onClick={handleSubmit} title="confirm edit">v</button>
+              <button onClick={handleCancel} title="cancel edit">x</button>
+            </> : <></>
+           }
            {/* start time */}
            {isEditing ?
             <SubmittableInput name="start" value={editValues.start}
+                              title="start time"
                               style={{width: editValues.start.length + 'ch'}}
                               onChange={handleEditValuesChange}
                               onSubmit={handleSubmit} autoComplete="off"/> :
@@ -283,6 +334,7 @@ function Timer(props) {
            {/* end time */}
            {isEditing ?
             <SubmittableInput name="end" value={editValues.end}
+                              title="end time"
                               style={{width: editValues.end.length + 'ch'}}
                               onChange={handleEditValuesChange}
                               onSubmit={handleSubmit} autoComplete="off"/> :
@@ -292,28 +344,9 @@ function Timer(props) {
               {displayTimes.end}
             </button>
            }
-           {/* edit confirm and cancel buttons */}
-           {isEditing ?
-            <>
-              <button onClick={handleSubmit}>v</button>
-              <button onClick={handleCancel}>x</button>
-            </> : <></>
-           }
          </div>
         }
       </div>
-      <br/>
-      {/* description */}
-      {isEditing ?
-       <SubmittableInput name="description" value={editValues.description}
-                         style={{width: editValues.title.length + 'ch'}}
-                         onChange={handleEditValuesChange}
-                         onSubmit={handleSubmit}/> :
-       <button className="timer-description"
-               onClick={() => setIsEditing(true)}>
-         {data.description}
-       </button>
-      }
     </div>
   );
 }

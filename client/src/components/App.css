@@ -1,5 +1,36 @@
-form, table {
-  display: inline;
+/*
+ * Root variables
+ *
+ * Variables for spacing, sizes, colors, and things that need to be different
+ * on the narrow layout.
+ */
+
+:root {
+  --timer-min-height: 3.1rem;
+  --time-section-min-width: 110px;
+  --middle-container-max-width: 40rem; /* unused atm */
+
+  --color-back: #CDCDC1;
+  --color-back-alt: #C6C6B9;
+  --color-active: green;
+  --color-alt: #6a6a6a;
+}
+@media screen and (max-width: 42em) {
+  :root {
+  }
+}
+
+/*
+ * Basic elements
+ */
+
+body {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  background: var(--color-back);
+}
+
+form {
+  display: inline-block;
 }
 
 input, button {
@@ -8,45 +39,84 @@ input, button {
   font-size: 14px;
   border-radius: 0;
   -webkit-appearance: none;
-  border: 1px solid grey; 
+  border: 1px solid grey;
+  box-sizing: border-box;
 }
 
-.App {
-  text-align: center;
+/*
+ * Layout
+ */
+
+@media screen and (min-width: 48.7em) {
+  .container__main > * {
+    margin-bottom: 0;
+  }
+  .container__main {
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr;
+    grid-gap: 10px 20px;
+  }
+  .container__middle {
+    grid-column: 2 / 3;
+  }
 }
 
-.App-link {
-  color: #61dafb;
-}
-
-body
-{
-  font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif;
-  background: #CDCDC1;
-}
-
-.timeline, .statistics {
-  /*width: calc((100% / 4) * 3);*/
-  width: 30em;
-  margin-left: auto;
-  margin-right: auto;
-}
+/*
+ * Timebar
+ */
 
 .timebar {
   text-align: center;
+  display: flex;
 }
 
+.timebar form {
+  flex: 1 auto;
+}
+
+.timebar input {
+  width: 100%;
+}
+
+.sync {
+  float: right;
+}
+
+.day-selector, .year-selector {
+  float: left;
+}
+
+.react-datepicker__input-container input {
+  width: 6.3em;
+}
+
+.react-datepicker__week-number {
+  color: black !important;
+  background-color: #f1f3f4;
+  font-style: italic;
+}
+
+/*
+ * Timer
+ */
+
 .timer {
+  min-height: var(--timer-min-height);
+  
   border-top: outset;
   padding: 5px;
+
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
 }
 
 .timer:nth-child(even) {
-  background-color: #C6C6B9;
+  background-color: var(--color-back-alt);
 }
 
 .time-section {
-  float: right;
+  min-width: var(--time-section-min-width);
 }
 
 .delete-button {
@@ -54,17 +124,39 @@ body
 }
 
 .timer-title {
-  background: none;
-  border: none;
   font-size: 1.2em;
 }
 
 .timer-description {
-  background: none;
-  border: none;
-  color: #6a6a6a;
+  color: var(--color-alt);
+  font-size: 0.95em;
+}
+
+.timer-title, .timer-description {
   text-align: left;
-  width: 350px;
+  display: inline-block;
+  padding: 0;
+  margin: 0;
+}
+
+.name-section input, .name-section textarea {
+  padding: 0;
+  margin: 0;
+  width: 90%;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.name-section form {
+  width: 100%;
+}
+
+.name-section {
+  flex: 1 auto;
+}
+
+.name-section, .time-section {
+  z-index: 1;
 }
 
 .start-time, .end-time {
@@ -78,23 +170,30 @@ body
 }
 
 .running {
-  color: green;
+  color: var(--color-active);
 }
 
-.sync {
-  float: right;
+.edit-btn, .edit-cancel-btn {
+  display: none;
+  position: absolute;
+  margin-left: -2em;
+  cursor: pointer;
+  padding: 1px;
 }
 
-.day-selector, .year-selector {
-  float: left;
+/* Pseudo-element to increase timer’s hover area */
+.timer:before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  left: 0;
+  height: var(--timer-min-height);
 }
 
-.react-datepicker__input-container input {
-  width: 5em;
+.timer:hover .edit-btn, .timer:hover .edit-cancel-btn {
+  visibility: visible;
+  display: block;
+  position: absolute;
 }
 
-.react-datepicker__week-number {
-  color: black !important;
-  background-color: #f1f3f4;
-  font-style: italic;
 }
