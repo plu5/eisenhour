@@ -24,8 +24,10 @@ function Timebar(props) {
    */
   function handleSubmit(event) {
     event.preventDefault();
-    props.addTimer(value);
-    setValue('');
+    if (value) {
+      props.addTimer(value);
+      setValue('');
+    }
   }
 
   return (
