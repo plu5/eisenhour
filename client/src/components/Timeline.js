@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react';
 
-import DaySelector from './DaySelector';
+import DateSelector from './DateSelector';
 import Timebar from './Timebar';
 import Timer from './Timer';
 
@@ -61,7 +61,7 @@ function Timeline() {
 
   return (
     <div className="timeline">
-      <DaySelector date={new Date(day.split('-'))} update={updateDay}/>
+      <DateSelector date={new Date(day.split('-'))} update={updateDay}/>
       <div className="sync">
         <button onClick={syncDown} title="sync down">↓</button>
         <button onClick={syncUp} title="sync up">↑</button>

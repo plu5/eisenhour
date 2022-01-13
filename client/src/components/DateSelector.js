@@ -5,11 +5,11 @@ import {createPortal} from 'react-dom';
 import './react-datepicker.css';
 
 /**
- * DaySelector
+ * DateSelector
  * @param {Object} props
  * @return {jsx}
  */
-function DaySelector(props) {
+function DateSelector(props) {
   const [today,] = useState(new Date()); // eslint-disable-line
   const [date, setDate] = useState(props.date);
   const update = useRef(props.update);
@@ -85,4 +85,4 @@ function DaySelector(props) {
   );
 }
 
-export default DaySelector;
+export default DateSelector;
