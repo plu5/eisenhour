@@ -5,6 +5,7 @@ const bodyParser = require('body-parser');
 
 const authentication = require('./authentication');
 const statistics = require('./statistics');
+const {tryDeleteObject} = require('./utils');
 
 // Set up express and io
 const app = module.exports.app = express();
@@ -177,23 +178,6 @@ app.post('/timerAdd', (req, res) => {
   console.log('new:', currentTimers[currentTimers.length - 1]);
   saveSave();
 });
-
-/**
- * Attempt to delete object with given id from given array.
- * @param {String} id
- * @param {Array} array
- * @return {Bool} true if object was deleted, false if not found.
- */
-function tryDeleteObject(id, array) {
-  const index = array.findIndex((t) => t.id === id);
-  if (index !== -1) {
-    console.log('delete:', array[index]);
-    array.splice(index, 1);
-    return true;
-  } else {
-    return false;
-  }
-}
 
 /**
  * Attempt to delete timer with given id from the entire save.
