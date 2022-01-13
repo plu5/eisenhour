@@ -14,6 +14,13 @@ function DateSelector(props) {
   const [date, setDate] = useState(props.date);
   const update = useRef(props.update);
 
+  const className = props.yearOnly ? 'year-selector' : 'day-selector';
+  const dateFormat = props.yearOnly ? 'yyyy' : 'yyyy-MM-dd';
+  const addFunc = props.yearOnly ? addYears : addDays;
+  const todayButtonLabel = props.yearOnly ? '→ this year' : '→ today';
+  const extraAttrs = props.yearOnly ? {showYearPicker: true,
+                                       yearItemNumber: 6} : {};
+
   // to help avoid running the update hook unnecessarily
   const firstRenderRef = useRef(true);
   const isFirstRender = useCallback(() => {
@@ -25,7 +32,6 @@ function DateSelector(props) {
 
   useEffect(() => {
     if (isFirstRender()) return;
-    console.log('updating you');
     update.current(date);
   }, [update, date, isFirstRender]);
 
@@ -40,16 +46,26 @@ function DateSelector(props) {
   }
 
   /**
-   * Scroll through days when scrolling the mousewheel
+   * Add num years to date.
+   * @param {Integer} num years to add. Pass in a negative value to subtract.
+   */
+  function addYears(num) {
+    const newDate = new Date(date.valueOf());
+    newDate.setFullYear(date.getFullYear() + num);
+    setDate(newDate);
+  }
+
+  /**
+   * Scroll through days/years when scrolling the mousewheel
    * @param {Object} event
    */
   function scroll(event) {
     event.preventDefault();
     if (event.deltaY > 0) {
       if (today.toDateString() === date.toDateString()) return;
-      addDays(1);
+      addFunc(1);
     } else {
-      addDays(-1);
+      addFunc(-1);
     }
   }
 
@@ -67,16 +83,18 @@ function DateSelector(props) {
   });
 
   return (
-    <div className="day-selector" ref={selectorRef}>
-      <button onClick={() => addDays(-1)}>&lt;</button>
-      <DatePicker dateFormat="yyyy-MM-dd" selected={date}
+    <div className={className} ref={selectorRef}>
+      <button onClick={() => addFunc(-1)}>&lt;</button>
+      <DatePicker dateFormat={dateFormat}
+                  selected={date}
                   onChange={(date) => setDate(date)}
                   showWeekNumbers
                   maxDate={today}
                   popperContainer={
                     ({children}) => createPortal(children, document.body)}
-                  todayButton="→ today"/>
-      <button onClick={() => addDays(1)}
+                  todayButton={todayButtonLabel}
+                  {...extraAttrs}/>
+      <button onClick={() => addFunc(1)}
               disabled={today.toDateString() === date.toDateString() ?
                         true : false}>
         &gt;

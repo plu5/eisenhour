@@ -1,6 +1,6 @@
 import React, {useState, useEffect} from 'react';
 
-import YearSelector from './YearSelector';
+import DateSelector from './DateSelector';
 import TaskGroup from './TaskGroup';
 
 /**
@@ -70,7 +70,7 @@ function Statistics() {
       </div>
 
       <br/>
-      <YearSelector date={date} update={setDate}/>
+      <DateSelector date={date} update={setDate} yearOnly={true}/>
       <button onClick={calculate}>Calculate</button>
       <br/>
       <div className="group-statistics">
