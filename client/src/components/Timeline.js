@@ -63,8 +63,8 @@ function Timeline() {
     <div className="timeline">
       <DaySelector date={new Date(day.split('-'))} update={updateDay}/>
       <div className="sync">
-        <button onClick={syncDown}>sync down</button>
-        <button onClick={syncUp}>sync up</button>
+        <button onClick={syncDown} title="sync down">↓</button>
+        <button onClick={syncUp} title="sync up">↑</button>
       </div>
       <Timebar addTimer={addTimer}/>
       {timers.map((t, i) => (
