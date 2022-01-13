@@ -3,7 +3,6 @@ const nanoid = require('nanoid').nanoid;
 const bodyParser = require('body-parser');
 
 const authentication = require('./authentication');
-const statistics = require('./statistics');
 const {tryDeleteObject} = require('./utils');
 const {
   getSave,
@@ -467,14 +466,6 @@ function removeFromQueue(index) {
   saveQueue();
 }
 
-app.get('/statistics/:year', (req, res) => {
-  const p = req.params;
-  // TODO: Not hardcode this
-  const myMatchers = {'dev/cs': ['^dev:', '^cs:'], 'contrib': ['^contrib:'],
-                      'game': ['^game:', '^g:'], 'film': ['^film:'],
-                      'other watch': ['^w:', '^watch:'], 'maths': ['^maths:'],
-                      'read': ['^read:'], 'ar': ['^ar:']};
-  const tallies = statistics.talliesForYear(p.year, save, myMatchers);
-  console.log(tallies);
-  res.send(tallies);
-});
+
+const groups = require('./task-groups');
+app.use('/groups', groups);

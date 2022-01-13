@@ -196,4 +196,19 @@ input, button {
   position: absolute;
 }
 
+/*
+ * Task groups
+ */
+
+.group-statistics td, .group-statistics th {
+  border: 1px solid #999;
+  padding: 0.2rem;
+  text-align: left;
+  font-family: Consolas, Monospace;
+  font-size: 12px;
+}
+
+.statistics {
+  z-index: 1;
+  position: relative;
 }

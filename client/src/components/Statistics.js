@@ -1,6 +1,7 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 
 import YearSelector from './YearSelector';
+import TaskGroup from './TaskGroup';
 
 /**
  * Statistics
@@ -9,6 +10,14 @@ import YearSelector from './YearSelector';
 function Statistics() {
   const [date, setDate] = useState(new Date());
   const [tallies, setTallies] = useState({});
+  const [groups, setGroups] = useState([]);
+
+  const update = async () => setGroups(await fetchGroups());
+
+  // Update group data on load
+  useEffect(() => {
+    update();
+  }, []);
 
   /**
    * get tallies
@@ -34,23 +43,50 @@ function Statistics() {
     });
   }
 
+  /**
+   * Add group button onClick function
+   * @param {Object} event
+   */
+  function addGroup(event) {
+    event.preventDefault();
+    const newGroups = groups.concat([{name: '', matchers: [''], colour: '',
+                                      edit: true}]);
+    setGroups(newGroups);
+  }
+
   return (
     <div className="statistics">
+      <div className="task-groups">
+        <span>Task groups</span>
+        <button onClick={addGroup}>+</button>
+        {groups.map((group, index) => (
+          <span key={index}>
+            <br/>
+            <TaskGroup name={group.name} matchers={group.matchers}
+                       colour={group.colour} edit={group.edit}
+                       update={update}/>
+          </span>
+        ))}
+      </div>
+
+      <br/>
       <YearSelector date={date} update={setDate}/>
       <button onClick={calculate}>Calculate</button>
       <br/>
-      <table>
-        <thead>
-          <tr>
-            <th>Group</th>
-            <th># of timers</th>
-            <th>Hours duration</th>
-          </tr>
-        </thead>
-        <tbody>
-          {renderTableData()}
-        </tbody>
-      </table>
+      <div className="group-statistics">
+        <table>
+          <thead>
+            <tr>
+              <th>Group</th>
+              <th># of tasks</th>
+              <th>Duration (hours)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {renderTableData()}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
@@ -60,7 +96,7 @@ function Statistics() {
  * @param {String} year in the format yyyy
  */
 async function fetchStatsOf(year) {
-  const response = await fetch('statistics/' + year);
+  const response = await fetch('groups/statistics/' + year);
   const json = await response.json();
   return json;
 }
@@ -75,6 +111,15 @@ async function fetchStatsOf(year) {
 function round(value, precision) {
     const multiplier = Math.pow(10, precision || 0);
     return Math.round(value * multiplier) / multiplier;
+}
+
+/**
+ * Get array of task groups from server
+ */
+async function fetchGroups() {
+  const response = await fetch('groups/');
+  const json = await response.json();
+  return json;
 }
 
 export default Statistics;
