@@ -1,4 +1,3 @@
-const fs = require('fs');
 const express = require('express');
 const nanoid = require('nanoid').nanoid;
 const bodyParser = require('body-parser');
@@ -6,14 +5,22 @@ const bodyParser = require('body-parser');
 const authentication = require('./authentication');
 const statistics = require('./statistics');
 const {tryDeleteObject} = require('./utils');
+const {
+  getSave,
+  getQueue,
+  saveSave,
+  saveSyncToken,
+  saveQueue,
+  getSyncToken,
+} = require('./save');
 
 // Set up express and io
-const app = module.exports.app = express();
+const app = express();
 const port = process.env.PORT || 3003;
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 const server = app.listen(port, () => console.log(`Listening on port ${port}`));
-const io = module.exports.io = require('socket.io')(server);
+const io = require('socket.io')(server);
 
 app.use('/authentication', authentication.router);
 
@@ -33,33 +40,12 @@ io.on('connection', function(socket) {
 
 let currentTimers = [];
 let save = null;
-const saveFilePath = 'save.json';
-const syncInfoPath = 'syncInfo.json';
-let syncInfo = null;
-let queue = [];
+let queue = null;
 
-// Load save, create if doesn’t exist
-if (!fs.existsSync(saveFilePath)) {
-  fs.writeFileSync(saveFilePath, '{}', (err) => {
-    if (err) return console.log('Error creating save:', err);
-  });
-}
-fs.readFile(saveFilePath, (err, content) => {
-  if (err) return console.log('Error loading save:', err);
-  save = JSON.parse(content);
-});
-
-// Load syncInfo, create if doesn’t exist
-if (!fs.existsSync(syncInfoPath)) {
-  fs.writeFileSync(syncInfoPath, '{}', (err) => {
-    if (err) return console.log('Error creating syncInfo:', err);
-  });
-}
-fs.readFile(syncInfoPath, (err, content) => {
-  if (err) return console.log('Error loading syncInfo:', err);
-  syncInfo = JSON.parse(content);
-  if (syncInfo.upQueue) queue = syncInfo.upQueue;
-});
+(async () => {
+  save = await getSave();
+  queue = await getQueue();
+})();
 
 /**
  * Get year, month, day from a Date object.
@@ -146,14 +132,6 @@ function updateCurrentTimers(year, month, day) {
   return currentTimers;
 }
 
-/**
- * Save save file
- */
-function saveSave() {
-  fs.writeFile(saveFilePath, JSON.stringify(save, null, 2), (err) => {
-    if (err) return console.log('Error saving save:', err);
-  });
-}
 
 app.get('/day/:year-:month-:day', (req, res) => {
   const p = req.params;
@@ -281,30 +259,6 @@ function storeNewEvents(events) {
 }
 
 /**
- * Save syncToken to file + date of sync (though right now the date is not used
- *  for anything).
- * @param {String} syncToken
- */
-function saveSyncToken(syncToken) {
-  const date = new Date();
-  syncInfo.syncToken = syncToken;
-  syncInfo.date = date;
-  fs.writeFileSync(syncInfoPath, JSON.stringify(syncInfo), (err) => {
-    if (err) return console.log('Error saving sync token:', err);
-  });
-}
-
-/**
- * Save queue to file.
- */
-function saveQueue() {
-  syncInfo.upQueue = queue;
-  fs.writeFileSync(syncInfoPath, JSON.stringify(syncInfo), (err) => {
-    if (err) return console.log('Error saving upQueue:', err);
-  });
-}
-
-/**
  * Sync down events from gcal.
  */
 async function syncDown() {
@@ -312,19 +266,10 @@ async function syncDown() {
   const initialParams = [calendar];
 
   // First check if we have a sync token and if so use it
-  if (fs.existsSync(syncInfoPath)) {
-    try {
-      syncInfo = JSON.parse(fs.readFileSync(syncInfoPath));
-      const syncToken = syncInfo.syncToken;
-      if (syncToken) {
-        initialParams.push(syncToken);
-        console.log('sync token', syncToken);
-      } else {
-        initialParams.push(null);
-      }
-    } catch (err) {
-      return console.log('Error loading sync token:', err);
-    }
+  const syncToken = getSyncToken();
+  if (syncToken != null) {
+    initialParams.push(syncToken);
+    console.log('sync token', syncToken);
   } else {
     // Otherwise, indicate we don’t have it
     initialParams.push(null);
