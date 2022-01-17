@@ -30,6 +30,25 @@ function saveGroups() {
   });
 }
 
+/**
+ * Return task groups matching timer
+ * @param {Object} timer
+ * @return {Array} groups
+ */
+function matchingGroupsFor(timer) {
+  const matchingGroups = [];
+  outer:
+  for (const group of groups) {
+    for (const matcher of group.matchers) {
+      if (statistics.timerMatches(matcher, timer)) {
+        matchingGroups.push(group);
+        continue outer;
+      }
+    }
+  }
+  return matchingGroups;
+}
+
 router.get('/', (req, res) => {
   res.send(groups);
 });
@@ -61,6 +80,11 @@ router.get('/statistics/:year', async (req, res) => {
   const tallies = statistics.talliesForYear(p.year, await getSave(), matchers);
   console.log(tallies);
   res.send(tallies);
+});
+
+router.post('/matching', (req, res) => {
+  const matchingGroups = matchingGroupsFor(req.body);
+  res.send(matchingGroups);
 });
 
 module.exports = router;

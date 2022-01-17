@@ -137,6 +137,24 @@ function Timer(props) {
       .then((json) => console.log(json));
   }, [data, isFirstRender]);
 
+  const [backgroundColour, setBackgroundColour] = useState(null);
+
+  // Check matching groups on initial render and when data changes
+  useEffect(() => {
+    fetch('groups/matching', {
+      method: 'post',
+      body: JSON.stringify(data),
+      headers: {'Content-Type': 'application/json'},
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.length) {
+          const group = json[json.length-1];
+          setBackgroundColour(group.colour);
+        }
+      });
+  }, [data]);
+
   /**
    * onChange function for edit values to keep in sync with DOM
    * @param {event} event
@@ -229,7 +247,8 @@ function Timer(props) {
   }
 
   return (
-    <div className="timer">
+    <div className="timer"
+         style={{backgroundColor: backgroundColour}}>
       <div className="name-section">
         {/* title */}
         {isEditing ?

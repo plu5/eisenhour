@@ -58,5 +58,5 @@ function timerSeconds(timer) {
   return secondsDuration;
 }
 
-module.exports = {talliesForYear};
+module.exports = {talliesForYear, timerMatches};
 
