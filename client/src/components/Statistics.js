@@ -59,13 +59,11 @@ function Statistics() {
       <div className="task-groups">
         <span>Task groups</span>
         <button onClick={addGroup}>+</button>
+        <br/>
         {groups.map((group, index) => (
-          <span key={index}>
-            <br/>
-            <TaskGroup name={group.name} matchers={group.matchers}
-                       colour={group.colour} edit={group.edit}
-                       update={update}/>
-          </span>
+          <TaskGroup name={group.name} matchers={group.matchers}
+                     colour={group.colour} edit={group.edit}
+                     update={update} key={index}/>
         ))}
       </div>
 

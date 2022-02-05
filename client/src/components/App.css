@@ -212,3 +212,7 @@ input, button {
   z-index: 1;
   position: relative;
 }
+
+.task-group {
+  display: block;
+}
