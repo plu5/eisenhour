@@ -50,6 +50,9 @@ function Timeline() {
     setTimers(await jsonToTimersArray(response));
   }
 
+  /**
+   * Ask server to sync down events
+   */
   async function syncDown() {
     const response = await fetch('sync/down', {
       method: 'post',
@@ -59,6 +62,9 @@ function Timeline() {
     setTimers(await jsonToTimersArray(response));
   }
 
+  /**
+   * Ask server to sync up events
+   */
   async function syncUp() {
     const response = await fetch('sync/up', {
       method: 'post',
@@ -89,6 +95,7 @@ function Timeline() {
 /**
  * Get array of timers from JSON server response
  * @param {JSON} response
+ * @return {Array} timer data array if exists or empty array
  */
 async function jsonToTimersArray(response) {
   const timerData = await JSON.parseWithDate(await response.text());
@@ -98,6 +105,7 @@ async function jsonToTimersArray(response) {
 /**
  * Get array of timers from server
  * @param {String} day in the format yyyy-m-d
+ * @return {Array} timer data array
  */
 async function fetchTimers(day) {
   const response = await fetch('day/' + day);
