@@ -1,4 +1,4 @@
-const {talliesForYear} = require('./statistics');
+const {talliesForYear, countRunning} = require('./statistics');
 
 const matchers = {'dev': ['^dev:']};
 const save = {'y2021': {'m1': {'d1': [{'title': 'dev:hi',
@@ -36,4 +36,28 @@ test('tallies with 2 matching timers', () => {
                                 'end': '2021-11-02T09:50:12.000Z'}];
   expect(talliesForYear(2021, save, matchers))
     .toStrictEqual({'dev': {'tally': 2, 'seconds': 5766 * 2}});
+});
+
+
+test('countRunning empty array', () => {
+  const upQueue = [];
+  expect(countRunning(upQueue)).toStrictEqual(0);
+});
+
+test('countRunning zero running timers', () => {
+  const upQueue = [{'new': {'id': 'V3xeNvpqyhJ3Nood3rJAc',
+                            'start': '2022-03-09T14:17:19.825Z',
+                            'end': '2022-03-09T15:17:19.825Z',
+                            'title': 'dev: eisenhour',
+                            'description': 'titlebar x timers in progress'}}];
+  expect(countRunning(upQueue)).toStrictEqual(0);
+});
+
+test('countRunning one running timer', () => {
+  const upQueue = [{'new': {'id': 'V3xeNvpqyhJ3Nood3rJAc',
+                            'start': '2022-03-09T14:17:19.825Z',
+                            'end': null,
+                            'title': 'dev: eisenhour',
+                            'description': 'titlebar x timers in progress'}}];
+  expect(countRunning(upQueue)).toStrictEqual(1);
 });

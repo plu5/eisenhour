@@ -58,5 +58,21 @@ function timerSeconds(timer) {
   return secondsDuration;
 }
 
-module.exports = {talliesForYear, timerMatches};
+/**
+ * Go through upQueue tallying the number of timers with no end time
+ * @param {Array} upQueue
+ * @return {Integer} num running
+ */
+function countRunning(upQueue) {
+  let num = 0;
+  for (const listing of upQueue) {
+    for (const timer of Object.values(listing)) {
+      if (timer.end == null) {
+        num += 1;
+      }
+    }
+  }
+  return num;
+}
 
+module.exports = {talliesForYear, timerMatches, countRunning};

@@ -26,6 +26,15 @@ function Timeline() {
     (async () => setTimers(await fetchTimers(day)))();
   }, [day]);
 
+  // Update page title on load and on timers change
+  useEffect(() => {
+    (async () => {
+      const count = await fetchCount();
+      document.title = (parseInt(count)>0 ? count + ' running | ' : '') +
+        'Eisenhour';
+    })();
+  }, [timers]);
+
   /**
    * Add new timer starting now and move to today
    * @param {String} title
@@ -93,6 +102,15 @@ async function jsonToTimersArray(response) {
 async function fetchTimers(day) {
   const response = await fetch('day/' + day);
   return jsonToTimersArray(response);
+}
+
+/**
+ * Get count of running timers from server
+ * @return {Integer} count of running timers
+ */
+async function fetchCount() {
+  const response = await fetch('countRunning');
+  return response.text();
 }
 
 export default Timeline;

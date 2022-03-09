@@ -13,6 +13,8 @@ const {
   getSyncToken,
 } = require('./save');
 
+const {countRunning} = require('./statistics');
+
 // Set up express and io
 const app = express();
 const port = process.env.PORT || 3003;
@@ -465,6 +467,11 @@ function removeFromQueue(index) {
   queue.splice(index, 1);
   saveQueue();
 }
+
+
+app.get('/countRunning', (req, res) => {
+  res.send(countRunning(queue).toString());
+});
 
 
 const groups = require('./task-groups');
