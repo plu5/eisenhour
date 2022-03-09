@@ -15,29 +15,18 @@ const {
 
 const {countRunning} = require('./statistics');
 
-// Set up express and io
+// Set up express
 const app = express();
 const port = process.env.PORT || 3003;
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
-const server = app.listen(port, () => console.log(`Listening on port ${port}`));
-const io = require('socket.io')(server);
+app.listen(port, () => console.log(`Listening on port ${port}`));
 
 app.use('/authentication', authentication.router);
 
 const getCalendar = () => {
   return authentication.getCalendar();
 };
-
-io.on('connection', function(socket) {
-  console.log('a user connected');
-  // Load client secrets from a local file.
-  // fs.readFile('credentials.json', (err, content) => {
-  //   if (err) return console.log('Error loading client secret file:', err);
-  //   // Pass on to client
-  //   io.emit('credentials', JSON.parse(content).web);
-  // });
-});
 
 let currentTimers = [];
 let save = null;
