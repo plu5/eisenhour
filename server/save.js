@@ -87,9 +87,11 @@ function saveSyncToken(syncToken) {
 
 /**
  * Save queue to file.
+ * @param {Array} newQueue
  */
-function saveQueue() {
-  syncInfo.upQueue = queue;
+function saveQueue(newQueue) {
+  syncInfo.upQueue = queue = newQueue;
+  console.log('saveQueue queue state:', queue);
   fs.writeFileSync(syncInfoPath, JSON.stringify(syncInfo), (err) => {
     if (err) return console.log('Error saving upQueue:', err);
   });

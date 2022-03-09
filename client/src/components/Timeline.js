@@ -42,7 +42,7 @@ function Timeline() {
   async function addTimer(title) {
     const start = new Date();
     updateDay(start);
-    const response = await fetch('timerAdd', {
+    const response = await fetch('timers/add', {
       method: 'post',
       body: JSON.stringify({title, start}),
       headers: {'Content-Type': 'application/json'},
@@ -51,7 +51,7 @@ function Timeline() {
   }
 
   async function syncDown() {
-    const response = await fetch('syncDown', {
+    const response = await fetch('sync/down', {
       method: 'post',
       body: JSON.stringify({}),
       headers: {'Content-Type': 'application/json'},
@@ -60,7 +60,7 @@ function Timeline() {
   }
 
   async function syncUp() {
-    const response = await fetch('syncUp', {
+    const response = await fetch('sync/up', {
       method: 'post',
       body: JSON.stringify({}),
       headers: {'Content-Type': 'application/json'},
@@ -109,7 +109,7 @@ async function fetchTimers(day) {
  * @return {Integer} count of running timers
  */
 async function fetchCount() {
-  const response = await fetch('countRunning');
+  const response = await fetch('timers/countRunning');
   return response.text();
 }
 

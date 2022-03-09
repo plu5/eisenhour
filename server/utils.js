@@ -16,4 +16,15 @@ function tryDeleteObject(value, array, key='id') {
   }
 }
 
-module.exports = {tryDeleteObject};
+/**
+ * Get year, month, day from a Date object.
+ * @param {Date} date
+ * @return {Array} [year, month, day]
+ */
+function getYearMonthDay(date) {
+  return [date.getFullYear(),
+          (date.getMonth() + 1),
+          date.getDate()];
+}
+
+module.exports = {tryDeleteObject, getYearMonthDay};

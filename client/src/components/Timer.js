@@ -128,7 +128,7 @@ function Timer(props) {
   // Update server when (and only when) the times, title, or description change
   useEffect(() => {
     if (isFirstRender()) return;
-    fetch('timerUpdate', {
+    fetch('timers/update', {
       method: 'post',
       body: JSON.stringify(data),
       headers: {'Content-Type': 'application/json'},
@@ -218,7 +218,7 @@ function Timer(props) {
    * Delete self
    */
   function selfDestruct() {
-    fetch('timerDelete', {
+    fetch('timers/delete', {
       method: 'post',
       body: JSON.stringify({id: data.id}),
       headers: {'Content-Type': 'application/json'},
@@ -234,7 +234,7 @@ function Timer(props) {
    * Duplicate self
    */
   function duplicate() {
-    fetch('timerDuplicate', {
+    fetch('timers/duplicate', {
       method: 'post',
       body: JSON.stringify(data),
       headers: {'Content-Type': 'application/json'},
