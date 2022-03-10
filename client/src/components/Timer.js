@@ -1,4 +1,5 @@
 import React, {useState, useEffect, useRef, useCallback} from 'react';
+import useCustomCompareEffect from 'use-custom-compare-effect';
 
 import SubmittableInput from './SubmittableInput';
 
@@ -126,16 +127,28 @@ function Timer(props) {
   }, [isRunning, data.start, elapsed]);
 
   // Update server when (and only when) the times, title, or description change
-  useEffect(() => {
+  useCustomCompareEffect(() => {
+    console.log('Timer: useCustomCompareEffect called');
     if (isFirstRender()) return;
+    console.log('Timer: useCustomCompareEffect updating server');
     fetch('timers/update', {
       method: 'post',
       body: JSON.stringify(data),
       headers: {'Content-Type': 'application/json'},
     })
       .then((res) => res.json())
-      .then((json) => console.log(json));
-  }, [data, isFirstRender]);
+      .then((json) => console.log(json))
+      .then(() => props.onDataUpdated());
+  }, [data, isFirstRender], (a, b) => {
+    if (a.length !== b.length) return false;
+    if (a[0].length !== b[0].length) return false;
+    for (const key of Object.keys(data)) {
+      if (a[0][key] !== b[0][key]) {
+        return false;
+      }
+    }
+    return true;
+  });
 
   const [backgroundColour, setBackgroundColour] = useState(null);
 

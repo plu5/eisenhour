@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 
 import DateSelector from './DateSelector';
 import Timebar from './Timebar';
@@ -26,14 +26,20 @@ function Timeline() {
     (async () => setTimers(await fetchTimers(day)))();
   }, [day]);
 
+  /**
+   * Update page title based on number of running timers
+   */
+  const updateTitle = useCallback(async () => {
+    console.log('Timeline: updateTitle called');
+    const count = await fetchCount();
+    document.title = (parseInt(count)>0 ? count + ' running | ' : '') +
+      'Eisenhour';
+  }, []);
+
   // Update page title on load and on timers change
   useEffect(() => {
-    (async () => {
-      const count = await fetchCount();
-      document.title = (parseInt(count)>0 ? count + ' running | ' : '') +
-        'Eisenhour';
-    })();
-  }, [timers]);
+    updateTitle();
+  }, [timers, updateTitle]);
 
   /**
    * Add new timer starting now and move to today
@@ -86,7 +92,8 @@ function Timeline() {
         // Setting key to be a combination of all the timer data because that
         //  way it will re-render the component when an update from the server
         //  caused e.g. only the title to change.
-        <Timer {...t} update={update} key={Object.values(t).join()}/>
+        <Timer {...t} update={update} onDataUpdated={updateTitle}
+               key={Object.values(t).join()}/>
       ))}
     </div>
   );
