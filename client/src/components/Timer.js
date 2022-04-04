@@ -1,6 +1,7 @@
 import React, {useState, useEffect, useRef, useCallback} from 'react';
 import useCustomCompareEffect from 'use-custom-compare-effect';
 
+import TimerElapsed from './TimerElapsed';
 import SubmittableInput from './SubmittableInput';
 
 /**
@@ -11,10 +12,6 @@ import SubmittableInput from './SubmittableInput';
 function Timer(props) {
   const [isRunning, setIsRunning] = useState(
     props.start && !props.end ? true : false);
-  const [elapsed, setElapsed] = useState(
-    props.end ?
-      calculateElapsed(props.start, props.end) :
-      '0:00:00');
 
   const [data, setData] = useState({
     id: props.id,
@@ -85,26 +82,6 @@ function Timer(props) {
   }
 
   /**
-   * Calculate elapsed time between start and end and return as a string
-   *  in the format H:MM:SS
-   * @param {Date} start
-   * @param {Date} end
-   * @return {String} elapsed time
-   */
-  function calculateElapsed(start, end) {
-    let ms = end.getTime() - start.getTime();
-    const hours = Math.floor(ms / (60**2 * 1000));
-    ms -= hours * (60**2 * 1000);
-    let minutes = Math.floor(ms / (60 * 1000));
-    ms -= minutes * (60 * 1000);
-    let seconds = Math.floor(ms / 1000);
-    if (minutes < 10) minutes = '0' + minutes;
-    if (seconds < 10) seconds = '0' + seconds;
-
-    return hours + ':' + minutes + ':' + seconds;
-  }
-
-  /**
    * Get display time (HH:MM) from date
    * @param {Date} date
    * @return {String}
@@ -112,19 +89,6 @@ function Timer(props) {
   function getDisplayTime(date) {
     return date.toLocaleTimeString('en-GB').substring(0, 5);
   }
-
-  // Tick elapsed every second while running
-  useEffect(() => {
-    let tickFunctionId = null;
-    if (isRunning) {
-      tickFunctionId = setInterval(() => {
-        setElapsed(calculateElapsed(data.start, new Date()));
-      }, 1000);
-    } else if (!isRunning && elapsed !== '0:00:00') {
-      clearInterval(tickFunctionId);
-    }
-    return () => clearInterval(tickFunctionId);
-  }, [isRunning, data.start, elapsed]);
 
   // Update server when (and only when) the times, title, or description change
   useCustomCompareEffect(() => {
@@ -202,8 +166,6 @@ function Timer(props) {
       newEnd.setMinutes(endMinutes);
       newData.end = newEnd;
       newDisplayTimes.end = editValues.end;
-
-      setElapsed(calculateElapsed(newStart, newEnd));
     } else {
       setElapsed(calculateElapsed(newStart, new Date()));
     }
@@ -304,10 +266,7 @@ function Timer(props) {
       <div className="time-section">
         {isEditing ? <></> :
          <>
-           <span className={'timer-elapsed' +
-                            (isRunning ? ' running' : '')}>
-             {elapsed}
-           </span>
+           <TimerElapsed start={data.start} end={data.end}/>
            {isRunning ?
             <button title="stop" onClick={stop}>
               ⏹
