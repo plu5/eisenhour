@@ -8,14 +8,18 @@ import './react-datepicker.css';
  * DateSelector
  * @param {Object} props
  * @param {Date} props.date date to set the selector to.
- * @param {Function} props.update callback to call when the date changes.
+ * @param {String} [props.name]
+ * @param {Function} props.onChange callback to call when the date changes.
+ *   Gets passed object similar to an event: {target: {name, value}} where
+ *    name is props.name and value is the new date.
  * @param {String} props.type 'year', 'day', or 'time'. defaults to 'day'.
  * @return {jsx}
  */
 function DateSelector(props) {
   const [today,] = useState(new Date()); // eslint-disable-line
   const [date, setDate] = useState(props.date);
-  const update = useRef(props.update);
+  const name = props.name;
+  const onChange = useRef(props.onChange);
   const onSubmit = props.onSubmit || false;
 
   let className = 'day-selector';
@@ -50,8 +54,8 @@ function DateSelector(props) {
   useEffect(() => {
     console.log('DateSelector: useEffect called');
     if (isFirstRender()) return;
-    update.current(date);
-  }, [update, date, isFirstRender]);
+    onChange.current({target: {name, value: date}});
+  }, [onChange, name, date, isFirstRender]);
 
   /**
    * Add num days to date.

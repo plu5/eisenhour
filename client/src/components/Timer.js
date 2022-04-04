@@ -141,17 +141,6 @@ function Timer(props) {
     setEditValues({...editValues, [event.target.name]: event.target.value});
   }
 
-  const updateStart = (date) =>
-        {
-          console.log('Timer updateStart');
-          setEditValues({...editValues, start: date});
-        };
-        
-  const updateEnd = (date) => {
-    console.log('Timer updateEnd');
-    setEditValues({...editValues, end: date});
-  };
-
   /**
    * onSubmit function for updating start and end in accordance with
    *  startEditValue and endEditValue
@@ -314,7 +303,8 @@ function Timer(props) {
            {isEditing ?
             <DateSelector name="start" date={data.start} type="time"
                           title="start time"
-                          update={updateStart} onSubmit={handleSubmit}/> :
+                          onChange={handleEditValuesChange}
+                          onSubmit={handleSubmit}/> :
             data.start &&
             <button onClick={() => setIsEditing(true)} className="start-time"
                     title={data.start.toLocaleString('en-GB')}>
@@ -327,7 +317,8 @@ function Timer(props) {
            {isEditing ?
             <DateSelector name="end" date={data.end} type="time"
                           title="end time"
-                          update={updateEnd} onSubmit={handleSubmit}/> :
+                          onChange={handleEditValuesChange}
+                          onSubmit={handleSubmit}/> :
             data.end &&
             <button onClick={() => setIsEditing(true)} className="end-time"
                     title={data.end.toLocaleString('en-GB')}>

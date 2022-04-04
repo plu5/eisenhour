@@ -82,7 +82,8 @@ function Timeline() {
 
   return (
     <div className="timeline">
-      <DateSelector date={new Date(day.split('-'))} update={updateDay}
+      <DateSelector date={new Date(day.split('-'))}
+                    onChange={(e) => updateDay(e.target.value)}
                     type="day"/>
       <div className="sync">
         <button onClick={syncDown} title="sync down">↓</button>
