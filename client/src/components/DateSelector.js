@@ -7,23 +7,40 @@ import './react-datepicker.css';
 /**
  * DateSelector
  * @param {Object} props
+ * @param {Date} props.date date to set the selector to.
+ * @param {Function} props.update callback to call when the date changes.
+ * @param {String} props.type 'year', 'day', or 'time'. defaults to 'day'.
  * @return {jsx}
  */
 function DateSelector(props) {
   const [today,] = useState(new Date()); // eslint-disable-line
   const [date, setDate] = useState(props.date);
   const update = useRef(props.update);
+  const onSubmit = props.onSubmit || false;
 
-  const className = props.yearOnly ? 'year-selector' : 'day-selector';
-  const dateFormat = props.yearOnly ? 'yyyy' : 'yyyy-MM-dd';
-  const addFunc = props.yearOnly ? addYears : addDays;
-  const todayButtonLabel = props.yearOnly ? '→ this year' : '→ today';
-  const extraAttrs = props.yearOnly ? {showYearPicker: true,
-                                       yearItemNumber: 6} : {};
+  let className = 'day-selector';
+  let dateFormat = 'yyyy-MM-dd';
+  let addFunc = addDays;
+  let todayButtonLabel = '→ today';
+  let extraAttrs = {};
+
+  if (props.type === 'year') {
+    className = 'year-selector';
+    dateFormat = 'yyyy';
+    addFunc = addYears;
+    todayButtonLabel = '→ this year';
+    extraAttrs = {showYearPicker: true, yearItemNumber: 6};
+  } else if (props.type === 'time') {
+    className = 'time-selector';
+    dateFormat = 'HH:mm';
+    addFunc = null;
+    extraAttrs = {showTimeSelect: true, timeIntervals: 30, timeFormat: 'HH:mm'};
+  }
 
   // to help avoid running the update hook unnecessarily
   const firstRenderRef = useRef(true);
   const isFirstRender = useCallback(() => {
+    console.log('DateSelector: isFirstRender useCallback');
     if (firstRenderRef.current) {
       firstRenderRef.current = false;
       return true;
@@ -31,6 +48,7 @@ function DateSelector(props) {
   }, [firstRenderRef]);
 
   useEffect(() => {
+    console.log('DateSelector: useEffect called');
     if (isFirstRender()) return;
     update.current(date);
   }, [update, date, isFirstRender]);
@@ -73,6 +91,7 @@ function DateSelector(props) {
   //  to work (prevent page scroll), where otherwise it would not
   const selectorRef = useRef(null);
   useEffect(() => {
+    console.log('DateSelector: selector useEffect called');
     if (selectorRef.current) {
       const selectorDiv = selectorRef.current;
       selectorDiv.addEventListener('wheel', scroll, {passive: false});
@@ -82,23 +101,36 @@ function DateSelector(props) {
     }
   });
 
+  /**
+   * Submit on enter
+   * @param {Object} event
+   */
+  function handleSubmitKey(event) {
+    if (event.keyCode === 13 && event.shiftKey === false) {
+      event.preventDefault();
+      if (onSubmit) onSubmit(event);
+    }
+  }
+
   return (
     <div className={className} ref={selectorRef}>
-      <button onClick={() => addFunc(-1)}>&lt;</button>
+      {addFunc ? <button onClick={() => addFunc(-1)}>&lt;</button> : <></>}
       <DatePicker dateFormat={dateFormat}
                   selected={date}
                   onChange={(date) => setDate(date)}
+                  onKeyDown={handleSubmitKey}
                   showWeekNumbers
                   maxDate={today}
                   popperContainer={
                     ({children}) => createPortal(children, document.body)}
                   todayButton={todayButtonLabel}
                   {...extraAttrs}/>
-      <button onClick={() => addFunc(1)}
-              disabled={today.toDateString() === date.toDateString() ?
-                        true : false}>
-        &gt;
-      </button>
+      {addFunc ?
+       <button onClick={() => addFunc(1)}
+               disabled={today.toDateString() === date.toDateString() ?
+                         true : false}>
+         &gt;
+       </button> : <></>}
     </div>
   );
 }

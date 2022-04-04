@@ -68,7 +68,7 @@ function Statistics() {
       </div>
 
       <br/>
-      <DateSelector date={date} update={setDate} yearOnly={true}/>
+      <DateSelector date={date} update={setDate} type="year"/>
       <button onClick={calculate}>Calculate</button>
       <br/>
       <div className="group-statistics">

@@ -3,6 +3,7 @@ import useCustomCompareEffect from 'use-custom-compare-effect';
 
 import TimerElapsed from './TimerElapsed';
 import SubmittableInput from './SubmittableInput';
+import DateSelector from './DateSelector';
 
 /**
  * Timer react component
@@ -29,8 +30,8 @@ function Timer(props) {
       getDisplayTime(props.end) : ''
   });
   const [editValues, setEditValues] = useState({
-    start: displayTimes.start,
-    end: displayTimes.end,
+    start: data.start,
+    end: data.end,
     title: data.title,
     description: data.description
   });
@@ -66,7 +67,7 @@ function Timer(props) {
     const now = new Date();
     setData({...data, start: now, end: null});
     setDisplayTimes({...displayTimes, start: getDisplayTime(now), end: ''});
-    setEditValues({...editValues, start: getDisplayTime(now), end: ''});
+    setEditValues({...editValues, start: now, end: null});
     setIsRunning(true);
   }
 
@@ -77,7 +78,7 @@ function Timer(props) {
     const now = new Date();
     setData({...data, end: now});
     setDisplayTimes({...displayTimes, end: getDisplayTime(now)});
-    setEditValues({...editValues, end: getDisplayTime(now)});
+    setEditValues({...editValues, end: now});
     setIsRunning(false);
   }
 
@@ -140,6 +141,17 @@ function Timer(props) {
     setEditValues({...editValues, [event.target.name]: event.target.value});
   }
 
+  const updateStart = (date) =>
+        {
+          console.log('Timer updateStart');
+          setEditValues({...editValues, start: date});
+        };
+        
+  const updateEnd = (date) => {
+    console.log('Timer updateEnd');
+    setEditValues({...editValues, end: date});
+  };
+
   /**
    * onSubmit function for updating start and end in accordance with
    *  startEditValue and endEditValue
@@ -151,23 +163,15 @@ function Timer(props) {
     const newData = {};
     const newDisplayTimes = {};
 
-    const [startHours, startMinutes] = editValues.start.split(':');
     // Clone the Date object before mutating it
-    const newStart = new Date(data.start.valueOf());
-    newStart.setHours(startHours);
-    newStart.setMinutes(startMinutes);
+    const newStart = new Date(editValues.start.valueOf());
     newData.start = newStart;
-    newDisplayTimes.start = editValues.start;
+    newDisplayTimes.start = getDisplayTime(newStart);
 
     if (data.end) {
-      const [endHours, endMinutes] = editValues.end.split(':');
-      const newEnd = new Date(data.end.valueOf());
-      newEnd.setHours(endHours);
-      newEnd.setMinutes(endMinutes);
+      const newEnd = new Date(editValues.end.valueOf());
       newData.end = newEnd;
-      newDisplayTimes.end = editValues.end;
-    } else {
-      setElapsed(calculateElapsed(newStart, new Date()));
+      newDisplayTimes.end = getDisplayTime(newEnd);
     }
 
     newData.title = editValues.title;
@@ -183,9 +187,8 @@ function Timer(props) {
    * When user cancels editing, revert to old values
    */
   function handleCancel() {
-    setEditValues({...editValues, start: displayTimes.start,
-                   end: displayTimes.end, title: data.title,
-                   description: data.description});
+    setEditValues({...editValues, start: data.start, end: data.end,
+                   title: data.title, description: data.description});
     setIsEditing(false);
   }
 
@@ -309,11 +312,9 @@ function Timer(props) {
            }
            {/* start time */}
            {isEditing ?
-            <SubmittableInput name="start" value={editValues.start}
-                              title="start time"
-                              style={{width: editValues.start.length + 'ch'}}
-                              onChange={handleEditValuesChange}
-                              onSubmit={handleSubmit} autoComplete="off"/> :
+            <DateSelector name="start" date={data.start} type="time"
+                          title="start time"
+                          update={updateStart} onSubmit={handleSubmit}/> :
             data.start &&
             <button onClick={() => setIsEditing(true)} className="start-time"
                     title={data.start.toLocaleString('en-GB')}>
@@ -324,11 +325,9 @@ function Timer(props) {
            {data.start ? <>-</> : <></>}
            {/* end time */}
            {isEditing ?
-            <SubmittableInput name="end" value={editValues.end}
-                              title="end time"
-                              style={{width: editValues.end.length + 'ch'}}
-                              onChange={handleEditValuesChange}
-                              onSubmit={handleSubmit} autoComplete="off"/> :
+            <DateSelector name="end" date={data.end} type="time"
+                          title="end time"
+                          update={updateEnd} onSubmit={handleSubmit}/> :
             data.end &&
             <button onClick={() => setIsEditing(true)} className="end-time"
                     title={data.end.toLocaleString('en-GB')}>

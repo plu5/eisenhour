@@ -24,9 +24,14 @@
  * Basic elements
  */
 
+html {
+  font-size: 13px; /* controls the size of datepicker */
+}
+
 body {
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
   background: var(--color-back);
+  font-size: 16px;
 }
 
 form {
@@ -194,6 +199,24 @@ input, button {
   visibility: visible;
   display: block;
   position: absolute;
+}
+
+/* time selector */
+.time-selector {
+  display: inline-block;
+}
+
+.time-selector input {
+  width: 4em;
+}
+
+.react-datepicker-time__caption {
+  font-weight: bold;
+}
+
+.react-datepicker__time-container--with-today-button {
+  right: -87px !important;
+  top: -1px !important;
 }
 
 /*
