@@ -21,8 +21,8 @@ Usage
 -----
 
 #. Get a local copy of this repository: either clone it or download and extract `ZIP of latest <https://github.com/plu5/eisenhour/archive/main.zip>`_   
-#. Install the `server dependencies`_ [``npm install``]
-#. Install the `client dependencies`_ [``cd client && npm install``]
+#. Install the server `dependencies`_ [``npm install``]
+#. Install the client `dependencies`_ [``cd client && npm install``]
 #. Run ``npm start``
 #. Open http://localhost:3002/ in your browser
 
