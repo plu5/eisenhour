@@ -177,6 +177,23 @@ async function updateEvent(calendar, timer) {
  * Sync up new, deleted, or updated timers to gcal.
  */
 async function syncUp() {
+  /**
+   * If timer does not have an end time, do not try to sync it.
+   * @param {Object} timer
+   * @param {Function} reject function of the promise
+   * @return {Bool} true if skipped, false if not. This is so that I can check
+   *   this value and return if the timer was skipped.
+   */
+  function maybeSkipRunningTimer(timer, reject) {
+    if (timer.end == null) {
+      const msg = `not syncing running timer ${timer.id} - ${timer.title}`;
+      console.log(msg);
+      reject(msg);
+      return true;
+    }
+    return false;
+  }
+
   const calendar = await getCalendar();
   const queue = await getQueue();
   const promises = queue.map((entry, index) => {
@@ -198,6 +215,7 @@ async function syncUp() {
             }
           });
       } else if (change === 'new') {
+        if (maybeSkipRunningTimer(timer, reject)) return;
         console.log(`sync up new: ${timer.id} - ${timer.title}`);
         insertEvent(calendar, timer)
           .then((v) => {
@@ -210,6 +228,7 @@ async function syncUp() {
             reject(e);
           });
       } else if (change === 'update') {
+        if (maybeSkipRunningTimer(timer, reject)) return;
         console.log(`sync up update: ${timer.id} - ${timer.title}`);
         updateEvent(calendar, timer)
           .then((v) => resolve(index))
