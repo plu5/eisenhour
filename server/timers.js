@@ -95,6 +95,7 @@ router.post('/duplicate', (req, res) => {
   res.send({duplicated: p.id, as: duplicateTimer.id});
   console.log('new (duplicate):', currentTimers[currentTimers.length - 1]);
   saveSave();
+  addToQueue('new', currentTimers[currentTimers.length - 1]);
 });
 
 router.get('/countRunning', async (req, res) => {
