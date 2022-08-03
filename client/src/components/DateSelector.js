@@ -81,7 +81,8 @@ function DateSelector(props) {
    * Scroll through days/years when scrolling the mousewheel
    * @param {Object} event
    */
-  function scroll(event) {
+  const scroll = useCallback((event) => {
+    if (!addFunc) return;
     event.preventDefault();
     if (event.deltaY > 0) {
       if (today.toDateString() === date.toDateString()) return;
@@ -89,7 +90,7 @@ function DateSelector(props) {
     } else {
       addFunc(-1);
     }
-  }
+  }, [addFunc, date, today]);
 
   // Workaround; attaching our onWheel function manually allows preventDefault
   //  to work (prevent page scroll), where otherwise it would not
@@ -103,7 +104,7 @@ function DateSelector(props) {
         selectorDiv.removeEventListener('wheel', scroll, {passive: false});
       };
     }
-  });
+  }, [selectorRef, scroll]);
 
   /**
    * Submit on enter
