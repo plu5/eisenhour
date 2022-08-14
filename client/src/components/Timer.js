@@ -36,6 +36,7 @@ function Timer(props) {
     description: data.description
   });
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isRestarting, setIsRestarting] = useState(false);
 
   // to help avoid running the update hook unnecessarily
   const firstRenderRef = useRef(true);
@@ -69,6 +70,7 @@ function Timer(props) {
     setDisplayTimes({...displayTimes, start: getDisplayTime(now), end: ''});
     setEditValues({...editValues, start: now, end: null});
     setIsRunning(true);
+    setIsRestarting(false);
   }
 
   /**
@@ -194,6 +196,7 @@ function Timer(props) {
       .then((json) => {
         console.log(json);
         props.update();
+        setIsDeleting(false);
       });
   }
 
@@ -264,10 +267,16 @@ function Timer(props) {
               ⏹
             </button> :
             <>
-              {/* TODO: Add are you sure as this is destructive */}
-              <button title="restart" onClick={restart}>
-                ▶
-              </button>
+              {isRestarting ?
+               <>
+                 <span style={{color: 'darkred'}}>restart, are you sure?</span>
+                 <button onClick={restart}>v</button>
+                 <button onClick={() => setIsRestarting(false)}>x</button>
+               </> :
+               <button title="restart" onClick={() => setIsRestarting(true)}>
+                 ▶
+               </button>
+              }
               <button title="resume as new" onClick={duplicate}>
                 +
               </button>
