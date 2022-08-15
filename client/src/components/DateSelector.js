@@ -8,16 +8,19 @@ import './react-datepicker.css';
  * DateSelector
  * @param {Object} props
  * @param {Date} props.date date to set the selector to.
- * @param {String} [props.name]
+ * @param {String} props.name name to pass through when calling props.onChange.
+ *   This is useful if you have several DateSelectors that use the same
+ *   onChange function, which can then be handled similarly to how it is done
+ *   with onChange events for HTML elements in forms.
  * @param {Function} props.onChange callback to call when the date changes.
- *   Gets passed object similar to an event: {target: {name, value}} where
- *    name is props.name and value is the new date.
+ *   Gets passed object similar to an event: {target: {name, value}} where name
+ *   is props.name and value is the new date.
  * @param {String} props.type 'year', 'day', or 'time'. defaults to 'day'.
  * @return {jsx}
  */
 function DateSelector(props) {
-  const [today,] = useState(new Date()); // eslint-disable-line
   const [date, setDate] = useState(props.date);
+  const [maxDate, setMaxDate] = useState(new Date());
   const name = props.name;
   const onChange = useRef(props.onChange);
   const onSubmit = props.onSubmit || false;
@@ -51,11 +54,19 @@ function DateSelector(props) {
     }
   }, [firstRenderRef]);
 
+  // Notify parent when date changes
   useEffect(() => {
     console.log('DateSelector: useEffect called');
     if (isFirstRender()) return;
     onChange.current({target: {name, value: date}});
   }, [onChange, name, date, isFirstRender]);
+
+  // Update date when props.date changes
+  useEffect(() => {
+    console.log('DateSelector: props.date useEffect called');
+    setMaxDate(new Date());
+    setDate(props.date);
+  }, [props.date]);
 
   /**
    * Add num days to date.
@@ -85,12 +96,12 @@ function DateSelector(props) {
     if (!addFunc) return;
     event.preventDefault();
     if (event.deltaY > 0) {
-      if (today.toDateString() === date.toDateString()) return;
+      if (maxDate.toDateString() === date.toDateString()) return;
       addFunc(1);
     } else {
       addFunc(-1);
     }
-  }, [addFunc, date, today]);
+  }, [addFunc, date, maxDate]);
 
   // Workaround; attaching our onWheel function manually allows preventDefault
   //  to work (prevent page scroll), where otherwise it would not
@@ -125,14 +136,14 @@ function DateSelector(props) {
                   onChange={(date) => setDate(date)}
                   onKeyDown={handleSubmitKey}
                   showWeekNumbers
-                  maxDate={today}
+                  maxDate={maxDate}
                   popperContainer={
                     ({children}) => createPortal(children, document.body)}
                   todayButton={todayButtonLabel}
                   {...extraAttrs}/>
       {addFunc ?
        <button onClick={() => addFunc(1)}
-               disabled={today.toDateString() === date.toDateString() ?
+               disabled={maxDate.toDateString() === date.toDateString() ?
                          true : false}>
          &gt;
        </button> : <></>}

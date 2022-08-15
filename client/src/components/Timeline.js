@@ -12,19 +12,36 @@ require('json.date-extensions');
  */
 function Timeline() {
   const [timers, setTimers] = useState([]);
-  const update = async () => setTimers(await fetchTimers(day));
 
-  const getDay = (date) => {
+  const [date, setDate] = useState(new Date());
+
+  /**
+   * Get a string in the format yyyy-m-d from a Date object.
+   * @param {Date} date
+   * @return {String} yyyy-m-d
+   */
+  function getDateStr(date) {
     return date.getFullYear() + '-' +
       (date.getMonth() + 1) + '-' + date.getDate();
-  };
-  const [day, setDay] = useState(getDay(new Date()));
-  const updateDay = (date) => setDay(getDay(date));
+  }
 
-  // Update timer data on load and on date change
+  const _update = useCallback(async () =>
+    setTimers(await fetchTimers(getDateStr(date))), [date]);
+
+  /**
+   * Update timers data
+   * @param {Date} [newDate] If provided the timeline will move to the given
+   *  date before updating the list of timers.
+   */
+  async function update(newDate) {
+    newDate ? setDate(newDate) : _update();
+  }
+
+  // Update timers data on load and on date change
   useEffect(() => {
-    (async () => setTimers(await fetchTimers(day)))();
-  }, [day]);
+    console.log('Timeline: update timers data useEffect');
+    _update();
+  }, [date, _update]);
 
   /**
    * Update page title based on number of running timers
@@ -47,7 +64,7 @@ function Timeline() {
    */
   async function addTimer(title) {
     const start = new Date();
-    updateDay(start);
+    setDate(start);
     const response = await fetch('timers/add', {
       method: 'post',
       body: JSON.stringify({title, start}),
@@ -82,8 +99,8 @@ function Timeline() {
 
   return (
     <div className="timeline">
-      <DateSelector date={new Date(day.split('-'))}
-                    onChange={(e) => updateDay(e.target.value)}
+      <DateSelector date={date}
+                    onChange={(e) => setDate(e.target.value)}
                     type="day"/>
       <div className="sync">
         <button onClick={syncDown} title="sync down">↓</button>
@@ -113,11 +130,11 @@ async function jsonToTimersArray(response) {
 
 /**
  * Get array of timers from server
- * @param {String} day in the format yyyy-m-d
+ * @param {String} dateStr in the format yyyy-m-d
  * @return {Array} timer data array
  */
-async function fetchTimers(day) {
-  const response = await fetch('day/' + day);
+async function fetchTimers(dateStr) {
+  const response = await fetch('day/' + dateStr);
   return jsonToTimersArray(response);
 }
 

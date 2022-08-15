@@ -88,9 +88,10 @@ router.post('/delete', (req, res) => {
 
 router.post('/duplicate', (req, res) => {
   const p = req.body;
+  updateCurrentTimers(...getYearMonthDay(new Date(p.start)));
   const duplicateTimer = {id: nanoid(), title: p.title,
                           description: p.description,
-                          start: new Date()};
+                          start: p.start};
   currentTimers.push(duplicateTimer);
   res.send({duplicated: p.id, as: duplicateTimer.id});
   console.log('new (duplicate):', currentTimers[currentTimers.length - 1]);

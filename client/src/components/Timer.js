@@ -8,6 +8,16 @@ import DateSelector from './DateSelector';
 /**
  * Timer react component
  * @param {Object} props
+ * @param {String} props.id
+ * @param {Date} props.start
+ * @param {Date} props.end
+ * @param {String} props.title
+ * @param {String} props.description
+ * @param {Function} props.update called when a timeline update is desired,
+ *  e.g. after the timer gets deleted. Expected to optionally take a date 
+ *  parameter to update the timeline to a given date.
+ * @param {Function} props.onDataUpdated called when times, title, or
+ *  description change
  * @return {jsx}
  */
 function Timer(props) {
@@ -204,15 +214,16 @@ function Timer(props) {
    * Duplicate self
    */
   function duplicate() {
+    const date = new Date();
     fetch('timers/duplicate', {
       method: 'post',
-      body: JSON.stringify(data),
+      body: JSON.stringify({...data, start: date}),
       headers: {'Content-Type': 'application/json'},
     })
       .then((res) => res.json())
       .then((json) => {
         console.log(json);
-        props.update();
+        props.update(date);
       });
   }
 
