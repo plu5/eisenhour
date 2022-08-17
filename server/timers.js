@@ -26,7 +26,7 @@ const router = new express.Router();
  * @return {Array} currentTimers
  */
 function getCurrentTimers() {
-  return currentTimers;
+  return sortArrayByStart(currentTimers);
 }
 
 /**
@@ -37,8 +37,8 @@ function getCurrentTimers() {
  * @return {Array} currentTimers
  */
 function updateCurrentTimers(year, month, day) {
-  currentTimers = sortArrayByStart(getDayArray(year, month, day));
-  return currentTimers;
+  currentTimers = getDayArray(year, month, day);
+  return getCurrentTimers();
 }
 
 /**
