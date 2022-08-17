@@ -63,8 +63,8 @@ function storeNewEvents(events) {
     const dayArray = getDayArray(...getYearMonthDay(start));
     dayArray.push({
       id: event.id,
-      start,
-      end: new Date(event.end.dateTime),
+      start: start.toJSON(),
+      end: new Date(event.end.dateTime).toJSON(),
       title: event.summary,
       description: event.description || '',
     });
