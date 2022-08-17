@@ -79,6 +79,7 @@ function Timer(props) {
     setData({...data, start: now, end: null});
     setDisplayTimes({...displayTimes, start: getDisplayTime(now), end: ''});
     setEditValues({...editValues, start: now, end: null});
+    props.update(now);
     setIsRunning(true);
     setIsRestarting(false);
   }
@@ -214,16 +215,16 @@ function Timer(props) {
    * Duplicate self
    */
   function duplicate() {
-    const date = new Date();
+    const now = new Date();
     fetch('timers/duplicate', {
       method: 'post',
-      body: JSON.stringify({...data, start: date}),
+      body: JSON.stringify({...data, start: now}),
       headers: {'Content-Type': 'application/json'},
     })
       .then((res) => res.json())
       .then((json) => {
         console.log(json);
-        props.update(date);
+        props.update(now);
       });
   }
 
