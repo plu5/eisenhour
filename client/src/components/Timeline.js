@@ -43,6 +43,31 @@ function Timeline() {
     _update();
   }, [date, _update]);
 
+  // Update date at midnight
+  useEffect(() => {
+    let timeoutId;
+
+    /**
+     * Set timeout to midnight
+     * @return {Object} timeout
+     */
+    function setTimeoutToMidnight() {
+      const midnight = new Date();
+      midnight.setHours(24, 0, 0, 0);
+      const now = new Date();
+      const msUntilMidnight = midnight.getTime() - now.getTime();
+      return setTimeout(function() {
+        setDate(new Date());
+        timeoutId = setTimeoutToMidnight();
+      }, msUntilMidnight);
+    }
+
+    timeoutId = setTimeoutToMidnight();
+    return () => {
+      clearInterval(timeoutId);
+    };
+  }, []);
+
   /**
    * Update page title based on number of running timers
    */
