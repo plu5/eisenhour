@@ -2,6 +2,7 @@ import React, {useState, useEffect, useCallback} from 'react';
 
 import {add, down, up} from '../api/TimerAPI';
 import DateSelector from './DateSelector';
+import QueueStatus from './QueueStatus';
 import Timebar from './Timebar';
 import Timer from './Timer';
 
@@ -119,6 +120,7 @@ function Timeline() {
       <div className="sync">
         <button onClick={syncDown} title="sync down">↓</button>
         <button onClick={syncUp} title="sync up">↑</button>
+        <QueueStatus/>
       </div>
       <Timebar addTimer={addTimer}/>
       {timers.map((t, i) => (

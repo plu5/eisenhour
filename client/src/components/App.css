@@ -87,6 +87,15 @@ input, button {
   float: right;
 }
 
+.queue-status {
+  font-family: monospace;
+  display: inline-block;
+  padding: 0 5px;
+  background: #a6a6a6;
+  color: white;
+  font-weight: bold;
+}
+
 .day-selector, .year-selector {
   float: left;
 }

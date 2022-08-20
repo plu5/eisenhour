@@ -267,5 +267,10 @@ router.post('/up', async (req, res) => {
   res.send(getCurrentTimers());
 });
 
+router.get('/countQueue', async (req, res) => {
+  const queue = await getQueue();
+  res.send(queue.length.toString());
+});
+
 
 module.exports = {router};
