@@ -1,6 +1,7 @@
 import React, {useState, useEffect, useRef, useCallback} from 'react';
 import useCustomCompareEffect from 'use-custom-compare-effect';
 
+import {update, del, dup} from '../api/TimerAPI';
 import TimerElapsed from './TimerElapsed';
 import SubmittableInput from './SubmittableInput';
 import DateSelector from './DateSelector';
@@ -109,11 +110,7 @@ function Timer(props) {
     console.log('Timer: useCustomCompareEffect called');
     if (isFirstRender()) return;
     console.log('Timer: useCustomCompareEffect updating server');
-    fetch('timers/update', {
-      method: 'post',
-      body: JSON.stringify(data),
-      headers: {'Content-Type': 'application/json'},
-    })
+    update(data)
       .then((res) => res.json())
       .then((json) => console.log(json))
       .then(() => props.onDataUpdated());
@@ -198,11 +195,7 @@ function Timer(props) {
    * Delete self
    */
   function selfDestruct() {
-    fetch('timers/delete', {
-      method: 'post',
-      body: JSON.stringify({id: data.id}),
-      headers: {'Content-Type': 'application/json'},
-    })
+    del(data.id)
       .then((res) => res.json())
       .then((json) => {
         console.log(json);
@@ -216,11 +209,7 @@ function Timer(props) {
    */
   function duplicate() {
     const now = new Date();
-    fetch('timers/duplicate', {
-      method: 'post',
-      body: JSON.stringify({...data, start: now}),
-      headers: {'Content-Type': 'application/json'},
-    })
+    dup(data, now)
       .then((res) => res.json())
       .then((json) => {
         console.log(json);

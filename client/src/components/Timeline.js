@@ -1,5 +1,6 @@
 import React, {useState, useEffect, useCallback} from 'react';
 
+import {add, down, up} from '../api/TimerAPI';
 import DateSelector from './DateSelector';
 import Timebar from './Timebar';
 import Timer from './Timer';
@@ -90,11 +91,7 @@ function Timeline() {
   async function addTimer(title) {
     const start = new Date();
     setDate(start);
-    const response = await fetch('timers/add', {
-      method: 'post',
-      body: JSON.stringify({title, start}),
-      headers: {'Content-Type': 'application/json'},
-    });
+    const response = await add(title, start);
     setTimers(await jsonToTimersArray(response));
   }
 
@@ -102,11 +99,7 @@ function Timeline() {
    * Ask server to sync down events
    */
   async function syncDown() {
-    const response = await fetch('sync/down', {
-      method: 'post',
-      body: JSON.stringify({}),
-      headers: {'Content-Type': 'application/json'},
-    });
+    const response = await down();
     setTimers(await jsonToTimersArray(response));
   }
 
@@ -114,11 +107,7 @@ function Timeline() {
    * Ask server to sync up events
    */
   async function syncUp() {
-    const response = await fetch('sync/up', {
-      method: 'post',
-      body: JSON.stringify({}),
-      headers: {'Content-Type': 'application/json'},
-    });
+    const response = await up();
     setTimers(await jsonToTimersArray(response));
   }
 
