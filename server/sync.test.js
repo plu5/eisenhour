@@ -1,7 +1,7 @@
 const {syncUp} = require('./sync');
 const authentication = require('./authentication');
 const save = require('./save');
-const _ = require('./queue'); // eslint-disable-line no-unused-vars
+const queue = require('./queue'); // eslint-disable-line no-unused-vars
 
 jest.mock('./authentication');
 jest.mock('./save');
@@ -43,11 +43,6 @@ const mockEventsFuncImplementation = (_, callback) => {
   callback(false, {data: {id: 'mock-id'}});
 };
 
-calendar.events.get.mockImplementation(mockEventsFuncImplementation);
-calendar.events.insert.mockImplementation(mockEventsFuncImplementation);
-calendar.events.delete.mockImplementation(mockEventsFuncImplementation);
-calendar.events.update.mockImplementation(mockEventsFuncImplementation);
-
 const expectEvents = (get, insert, delete_, update) => {
   expect(calendar.events.get).toHaveBeenCalledTimes(get);
   expect(calendar.events.insert).toHaveBeenCalledTimes(insert);
@@ -55,10 +50,15 @@ const expectEvents = (get, insert, delete_, update) => {
   expect(calendar.events.update).toHaveBeenCalledTimes(update);
 };
 
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 
 describe('syncUp', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    for (const f of [calendar.events.get, calendar.events.insert,
+                     calendar.events.delete, calendar.events.update])
+      f.mockImplementation(mockEventsFuncImplementation);
     authentication.getCalendar.mockReturnValue(calendar);
   });
   it('skips running timer', async () => {
@@ -80,5 +80,14 @@ describe('syncUp', () => {
     mockQueue(1, {0: {update: true}});
     await syncUp();
     expectEvents(1, 0, 0, 1);
+  });
+  it('handles promise rejection in case of server error', async () => {
+    calendar.events.insert.mockImplementation(async (_, callback) => {
+      await delay(100);
+      callback(new Error('Rate Limit Exceeded'), null);
+    });
+    mockQueue(1);
+    await syncUp();
+    expect(queue.removeFromQueue).toHaveBeenCalledTimes(0);
   });
 });

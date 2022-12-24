@@ -117,7 +117,7 @@ async function deleteEvent(calendar, timer) {
   return new Promise((resolve, reject) => {
     calendar.events.delete(
       {calendarId: 'primary', eventId: timer.id}, (err, res) => {
-        if (err) reject(err);
+        if (err) return reject(err);
         resolve(console.log(`deleteEvent ${timer.id}`));
       });
   });
@@ -140,7 +140,7 @@ function insertEvent(calendar, timer) {
     };
     calendar.events.insert(
       {calendarId: 'primary', resource: event}, (err, res) => {
-        if (err) reject(err);
+        if (err) return reject(err);
         console.log(res.data);
         resolve(res.data.id);
       });
@@ -157,7 +157,7 @@ async function updateEvent(calendar, timer) {
     // Get and update existing event
     calendar.events.get(
       {calendarId: 'primary', eventId: timer.id}, (err, res) => {
-        if (err) reject(err);
+        if (err) return reject(err);
         const event = res.data;
         event.summary = timer.title || event.summary;
         event.description = timer.description || event.description;
@@ -166,7 +166,7 @@ async function updateEvent(calendar, timer) {
         calendar.events.update(
           {calendarId: 'primary', eventId: timer.id, resource: event}
           , (err, res) => {
-            if (err) reject(err);
+            if (err) return reject(err);
             resolve(console.log(`updateEvent ${res.data}`));
           });
       });
