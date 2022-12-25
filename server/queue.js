@@ -40,7 +40,6 @@ function addToQueue(typeOfChange, timer) {
     queue.push({[typeOfChange]: timer});
   }
 
-  console.log('addToQueue queue state:', queue);
   saveQueue(queue);
 }
 
@@ -50,7 +49,6 @@ function addToQueue(typeOfChange, timer) {
  */
 function removeFromQueue(index) {
   queue.splice(index, 1);
-  console.log('removeFromQueue queue state:', queue);
   saveQueue(queue);
 }
 
