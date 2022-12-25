@@ -114,13 +114,8 @@ async function syncDown() {
  * @param {Object} timer
  */
 async function deleteEvent(calendar, timer) {
-  return new Promise((resolve, reject) => {
-    calendar.events.delete(
-      {calendarId: 'primary', eventId: timer.id}, (err, res) => {
-        if (err) return reject(err);
-        resolve(console.log(`deleteEvent ${timer.id}`));
-      });
-  });
+  await calendar.events.delete({calendarId: 'primary', eventId: timer.id});
+  return console.log(`deleteEvent ${timer.id}`);
 }
 
 /**
@@ -130,21 +125,16 @@ async function deleteEvent(calendar, timer) {
  * @param {Object} timer
  * @return {Promise}
  */
-function insertEvent(calendar, timer) {
-  return new Promise((resolve, reject) => {
-    const event = {
-      summary: timer.title,
-      description: timer.description,
-      start: {dateTime: timer.start},
-      end: {dateTime: timer.end},
-    };
-    calendar.events.insert(
-      {calendarId: 'primary', resource: event}, (err, res) => {
-        if (err) return reject(err);
-        console.log(res.data);
-        resolve(res.data.id);
-      });
-  });
+async function insertEvent(calendar, timer) {
+  const event = {
+    summary: timer.title,
+    description: timer.description,
+    start: {dateTime: timer.start},
+    end: {dateTime: timer.end},
+  };
+  const res = await calendar.events.insert({calendarId: 'primary',
+                                            resource: event});
+  return res.data.id;
 }
 
 /**
@@ -153,24 +143,17 @@ function insertEvent(calendar, timer) {
  * @param {Object} timer
  */
 async function updateEvent(calendar, timer) {
-  return new Promise((resolve, reject) => {
-    // Get and update existing event
-    calendar.events.get(
-      {calendarId: 'primary', eventId: timer.id}, (err, res) => {
-        if (err) return reject(err);
-        const event = res.data;
-        event.summary = timer.title || event.summary;
-        event.description = timer.description || event.description;
-        event.start = {dateTime: timer.start};
-        event.end = {dateTime: timer.end};
-        calendar.events.update(
-          {calendarId: 'primary', eventId: timer.id, resource: event}
-          , (err, res) => {
-            if (err) return reject(err);
-            resolve(console.log(`updateEvent ${res.data}`));
-          });
-      });
-  });
+  // Get and update existing event
+  const res = await calendar.events.get({calendarId: 'primary',
+                                         eventId: timer.id});
+  const event = res.data;
+  event.summary = timer.title || event.summary;
+  event.description = timer.description || event.description;
+  event.start = {dateTime: timer.start};
+  event.end = {dateTime: timer.end};
+  await calendar.events.update({calendarId: 'primary',
+                                eventId: timer.id, resource: event});
+  return console.log(`updateEvent ${res.data.id}`);
 }
 
 /**
