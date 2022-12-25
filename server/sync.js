@@ -1,4 +1,5 @@
 const express = require('express');
+const Bottleneck = require('bottleneck/es5');
 
 const authentication = require('./authentication');
 const {getYearMonthDay} = require('./utils');
@@ -18,6 +19,14 @@ const {
 } = require('./save');
 
 const router = new express.Router();
+
+const limiter = new Bottleneck({
+  maxConcurrent: 10, minTime: 10, reservoir: 10
+});
+limiter.on('executing', (info) => {
+  setTimeout(() => limiter.incrementReservoir(1), 1000);
+});
+const schedule = async (f, ...args) => limiter.schedule(() => f(...args));
 
 
 const getCalendar = () => {
@@ -184,7 +193,7 @@ async function syncUp() {
     return new Promise((resolve, reject) => {
       if (change === 'delete') {
         console.log(`sync up delete: ${timer.id} - ${timer.title}`);
-        deleteEvent(calendar, timer)
+        schedule(deleteEvent, calendar, timer)
           .then((v) => resolve(index))
           .catch((e) => {
             console.log(`The API returned an error\
@@ -200,7 +209,7 @@ async function syncUp() {
       } else if (change === 'new') {
         if (maybeSkipRunningTimer(timer, reject)) return;
         console.log(`sync up new: ${timer.id} - ${timer.title}`);
-        insertEvent(calendar, timer)
+        schedule(insertEvent, calendar, timer)
           .then((v) => {
             timer.id = v;
             resolve(index);
@@ -213,7 +222,7 @@ async function syncUp() {
       } else if (change === 'update') {
         if (maybeSkipRunningTimer(timer, reject)) return;
         console.log(`sync up update: ${timer.id} - ${timer.title}`);
-        updateEvent(calendar, timer)
+        schedule(updateEvent, calendar, timer)
           .then((v) => resolve(index))
           .catch((e) => {
             console.log(`The API returned an error\

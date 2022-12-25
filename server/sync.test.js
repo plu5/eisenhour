@@ -86,4 +86,30 @@ describe('syncUp', () => {
     await syncUp();
     expect(queue.removeFromQueue).toHaveBeenCalledTimes(0);
   });
+  it('bottlenecks insert operations to 10 per 1000ms', async () => {
+    let callsCount = 0;
+    let start = Date.now();
+    let previous = null;
+    calendar.events.insert.mockImplementation(async (...args) => {
+      callsCount += 1;
+      const now = Date.now();
+      const resetCond = now + 0 > start + 1000;
+      console.log(callsCount, previous ? now-previous : 0, now-start,
+                  resetCond ? 'RESET' : '');
+      previous = now;
+      if (resetCond) {
+        callsCount = 0;
+        start = Date.now();
+      }
+      if (callsCount > 10) {
+        throw new Error('Rate Limit Exceeded');
+      } else {
+        return {data: {id: dummyUpQueueItemFields.id}};
+      }
+    });
+    mockQueue(15);
+    await syncUp();
+    expectEvents(0, 15, 0, 0);
+    expect(queue.removeFromQueue).toHaveBeenCalledTimes(15);
+  });
 });
