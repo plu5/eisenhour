@@ -18,7 +18,7 @@ import './react-datepicker.css';
  *   is props.name and value is the new date.
  * @param {String} props.type 'year', 'month', 'day', 'daterange-start',
  *   'daterange-end', or 'time'. defaults to 'day'.
- * @param {Date} props.startDate required with type 'daterange-end'. Represents 
+ * @param {Date} props.startDate required with type 'daterange-end'. Represents
  *  the start of the range.
  * @param {Date} props.endDate required with type 'daterange-start'. Represents
  *  the end of the range.
@@ -28,7 +28,6 @@ function DateSelector(props) {
   const [date, setDate] = useState(props.date);
   const [maxDate, setMaxDate] = useState(new Date());
   const name = props.name;
-  const onChange = useRef(props.onChange);
   const onSubmit = props.onSubmit || false;
 
   let className = 'day-selector';
@@ -63,29 +62,23 @@ function DateSelector(props) {
                   minDate: minDate};
   }
 
-  // to help avoid running the update hook unnecessarily
-  const firstRenderRef = useRef(true);
-  const isFirstRender = useCallback(() => {
-    console.log('DateSelector: isFirstRender useCallback');
-    if (firstRenderRef.current) {
-      firstRenderRef.current = false;
-      return true;
-    }
-  }, [firstRenderRef]);
-
-  // Notify parent when date changes
-  useEffect(() => {
-    console.log('DateSelector: useEffect called');
-    if (isFirstRender()) return;
-    onChange.current({target: {name, value: date}});
-  }, [onChange, name, date, isFirstRender]);
-
   // Update date when props.date changes
   useEffect(() => {
-    console.log('DateSelector: props.date useEffect called');
     setMaxDate(new Date());
     setDate(props.date);
   }, [props.date]);
+
+  /**
+   * onChange handler
+   * Update date and pass event to props.onChange
+   * @param {Date} date
+   * @param {Object} event
+   */
+  function handleChange(date, event) {
+    setDate(date);
+    event = {target: {name, value: date}};
+    props.onChange(event);
+  }
 
   /**
    * Add num days to date.
@@ -95,6 +88,7 @@ function DateSelector(props) {
     const newDate = new Date(date.valueOf());
     newDate.setDate(date.getDate() + num);
     setDate(newDate);
+    handleChange(newDate);
   }
 
   /**
@@ -105,6 +99,9 @@ function DateSelector(props) {
     const newDate = new Date(date.valueOf());
     newDate.setFullYear(date.getFullYear() + num);
     setDate(newDate);
+    handleChange(newDate);
+  }
+
   /**
    * Add num months to date.
    * @param {Integer} num months to add. Pass in a negative value to subtract.
@@ -130,13 +127,12 @@ function DateSelector(props) {
       if (minDate && minDate.toDateString() === date.toDateString()) return;
       addFunc(-1);
     }
-  }, [addFunc, date, maxDate]);
+  }, [addFunc, date, maxDate, minDate]);
 
   // Workaround; attaching our onWheel function manually allows preventDefault
   //  to work (prevent page scroll), where otherwise it would not
   const selectorRef = useRef(null);
   useEffect(() => {
-    console.log('DateSelector: selector useEffect called');
     if (selectorRef.current) {
       const selectorDiv = selectorRef.current;
       selectorDiv.addEventListener('wheel', scroll, {passive: false});
@@ -167,7 +163,7 @@ function DateSelector(props) {
        &lt;</button> : <></>}
       <DatePicker dateFormat={dateFormat}
                   selected={date}
-                  onChange={(date) => setDate(date)}
+                  onChange={handleChange}
                   onKeyDown={handleSubmitKey}
                   locale={enGB}
                   showWeekNumbers

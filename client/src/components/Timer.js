@@ -15,7 +15,7 @@ import DateSelector from './DateSelector';
  * @param {String} props.title
  * @param {String} props.description
  * @param {Function} props.update called when a timeline update is desired,
- *  e.g. after the timer gets deleted. Expected to optionally take a date 
+ *  e.g. after the timer gets deleted. Expected to optionally take a date
  *  parameter to update the timeline to a given date.
  * @param {Function} props.onDataUpdated called when times, title, or
  *  description change
@@ -144,7 +144,7 @@ function Timer(props) {
   }, [data]);
 
   /**
-   * onChange function for edit values to keep in sync with DOM
+   * onChange handler for edit values to keep in sync with DOM
    * @param {event} event
    */
   function handleEditValuesChange(event) {
