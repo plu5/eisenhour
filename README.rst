@@ -44,6 +44,7 @@ The server dependencies are in ``./package.json``, and the cilent dependencies a
   - ``body-parser ^1.19.0``
   - ``googleapis ^67.0.0``
   - ``nanoid ^3.1.20``
+  - ``bottleneck ^2.19.5``
 
 - Client-specific (most of these are from the react template config, I may be able to get rid of some in future):
 
@@ -87,7 +88,14 @@ The server dependencies are in ``./package.json``, and the cilent dependencies a
 
 **Optional:**
 
-- ``jest`` -- to run tests
+- To run tests:
+
+  - ``jest``
+
+- For linting:
+
+  - ``eslint``
+  - ``@babel/eslint-parser ^7.19.1``
 
 Getting started
 ^^^^^^^^^^^^^^^
