@@ -105,9 +105,15 @@ input, button {
 }
 
 .react-datepicker__week-number {
-  color: black !important;
-  background-color: #f1f3f4;
+  color: white !important;
+  background-color: #444;
   font-style: italic;
+}
+.react-datepicker__week-number::before {
+  content: 'W';
+}
+.react-datepicker__week-number::after {
+  content: ':';
 }
 
 /*
