@@ -9,8 +9,10 @@ import TaskGroup from './TaskGroup';
  */
 function Statistics() {
   const [date, setDate] = useState(new Date());
+  const [toDate, setToDate] = useState(date); // Only used for range type
   const [tallies, setTallies] = useState({});
   const [groups, setGroups] = useState([]);
+  const [dateType, setDateType] = useState('month');
 
   const update = async () => setGroups(await fetchGroups());
 
@@ -23,7 +25,7 @@ function Statistics() {
    * get tallies
    */
   async function calculate() {
-    setTallies(await fetchStatsOf(date.getFullYear()));
+    setTallies(await fetchStatsOf(date, dateType, toDate));
   }
 
   /**
@@ -54,6 +56,48 @@ function Statistics() {
     setGroups(newGroups);
   }
 
+  /**
+   * dateType select onChange function
+   * @param {Object} event
+   */
+  function handleDateTypeChange(event) {
+    setDateType(event.target.value);
+  }
+
+  /**
+   * JSX date selector for the given type
+   * @param {String} type (year, month, or range)
+   * @return {jsx}
+   */
+  function getDateSelector(type) {
+    if (type === 'year') {
+      return (
+        <DateSelector date={date} onChange={(e) => setDate(e.target.value)}
+                      type="year"/>
+      );
+    } else if (type === 'month') {
+      return (
+        <DateSelector date={date} onChange={(e) => setDate(e.target.value)}
+                      type="month"/>
+      );
+    } else if (type === 'day') {
+      return (
+        <DateSelector date={date} onChange={(e) => setDate(e.target.value)}
+                      type="day"/>
+      );
+    } else {
+      return (
+        <>
+          <DateSelector date={date} onChange={(e) => setDate(e.target.value)}
+                        type="daterange-start" endDate={toDate}/>
+          <DateSelector date={toDate}
+                        onChange={(e) => setToDate(e.target.value)}
+                        type="daterange-end" startDate={date}/>
+        </>
+      );
+    }
+  }
+
   return (
     <div className="statistics">
       <div className="task-groups">
@@ -68,8 +112,14 @@ function Statistics() {
       </div>
 
       <br/>
-      <DateSelector date={date} onChange={(e) => setDate(e.target.value)}
-                    type="year"/>
+      <select value={dateType} onChange={handleDateTypeChange}>
+        <option value="year">Year</option>
+        <option value="month">Month</option>
+        <option value="day">Day</option>
+        <option value="range">Range</option>
+      </select>
+      <br/>
+      {getDateSelector(dateType)}
       <button onClick={calculate}>Calculate</button>
       <br/>
       <div className="group-statistics">
@@ -92,10 +142,26 @@ function Statistics() {
 
 /**
  * Get array of stats from server
- * @param {String} year in the format yyyy
+ * @param {Date} date
+ * @param {String} dateType 'year'/'month'/'day'/'range'
+ * @param {Date} to; required in 'range' dateType, not used otherwise
  */
-async function fetchStatsOf(year) {
-  const response = await fetch('groups/statistics/' + year);
+async function fetchStatsOf(date, dateType, to=null) {
+  let route = 'groups/statistics/';
+  if (['year', 'month', 'day'].includes(dateType)) {
+    route += date.getFullYear();
+    // NOTE: JavaScript Date months are 0-based
+    if (['month', 'day'].includes(dateType)) {
+      route += '/' + (date.getMonth() + 1);
+      if (dateType === 'day') route += '/' + date.getDate();
+    }
+  } else if (dateType === 'range') {
+    if (!to) throw new Error('range type specified but no to date provided');
+    const dtStr = (dt) => [
+      dt.getFullYear(), (dt.getMonth() + 1), dt.getDate()].join('-');
+    route += 'range/' + [dtStr(date), dtStr(to)].join('/');
+  }
+  const response = await fetch(route);
   const json = await response.json();
   return json;
 }

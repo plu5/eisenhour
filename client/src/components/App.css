@@ -96,7 +96,7 @@ input, button {
   font-weight: bold;
 }
 
-.day-selector, .year-selector {
+.day-selector, .year-selector, .month-selector {
   float: left;
 }
 
