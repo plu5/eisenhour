@@ -3,10 +3,12 @@ const changeSubscribers = [];
 /**
  * Add a function to changeSubscribers which will be called when a timer data
  *  function is called.
- * @param {Function} callback
+ * @param {Function} f
  */
-function subscribe(callback) {
-  changeSubscribers.push(callback);
+function subscribe(f) {
+  if (changeSubscribers.some((e) =>
+    Object.entries(e).toString() === Object.entries(f).toString())) return;
+  changeSubscribers.push(f);
 }
 
 /**
