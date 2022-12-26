@@ -1,6 +1,7 @@
 import React, {useState, useEffect, useRef, useCallback} from 'react';
 import DatePicker from 'react-datepicker';
 import {createPortal} from 'react-dom';
+import enGB from 'date-fns/locale/en-GB';
 
 import './react-datepicker.css';
 
@@ -168,6 +169,7 @@ function DateSelector(props) {
                   selected={date}
                   onChange={(date) => setDate(date)}
                   onKeyDown={handleSubmitKey}
+                  locale={enGB}
                   showWeekNumbers
                   maxDate={maxDate}
                   popperContainer={
