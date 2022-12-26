@@ -129,6 +129,8 @@ function Timer(props) {
 
   // Check matching groups on initial render and when data changes
   useEffect(() => {
+    let isMounted = true; // Prevent state update on unmounted component
+                          // (happens when changing timeline quickly)
     fetch('groups/matching', {
       method: 'post',
       body: JSON.stringify(data),
@@ -138,9 +140,12 @@ function Timer(props) {
       .then((json) => {
         if (json.length) {
           const group = json[json.length-1];
-          setBackgroundColour(group.colour);
+          if (isMounted) setBackgroundColour(group.colour);
         }
       });
+    return () => {
+      isMounted = false;
+    };
   }, [data]);
 
   /**
