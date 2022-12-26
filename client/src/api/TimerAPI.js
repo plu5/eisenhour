@@ -6,9 +6,13 @@ const changeSubscribers = [];
  * @param {Function} f
  */
 function subscribe(f) {
-  if (changeSubscribers.some((e) =>
-    Object.entries(e).toString() === Object.entries(f).toString())) return;
-  changeSubscribers.push(f);
+  const existing = changeSubscribers.findIndex((e) =>
+    Object.entries(e).toString() === Object.entries(f).toString());
+  if (existing !== -1) {
+    changeSubscribers[existing] = f;
+  } else {
+    changeSubscribers.push(f);
+  }
 }
 
 /**
