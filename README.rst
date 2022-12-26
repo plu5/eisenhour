@@ -5,7 +5,7 @@
   Eisenhour
   </h1>
 
-*Eisenhour* is a free and open-source time-management application that syncs with Google Calendar (support for other calendar services is planned) and represents calendar events as timers. It allows creating task groups to categorise timers with regex matching against their titles, and tally the amount of time put into each task group.
+*Eisenhour* is a free and open-source time-management application that syncs with Google Calendar and represents calendar events as timers. It allows creating task groups to categorise timers with regex matching against their titles, and tally the amount of time put into each task group.
 
 .. figure:: https://raw.githubusercontent.com/plu5/eisenhour/main/docs/_static/img/col.png
    :align: center
