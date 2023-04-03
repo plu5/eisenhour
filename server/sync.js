@@ -2,7 +2,7 @@ const express = require('express');
 const Bottleneck = require('bottleneck/es5');
 
 const authentication = require('./authentication');
-const {getYearMonthDay} = require('./utils');
+const {getYearMonthDay, getDateStr} = require('./utils');
 const {removeFromQueue} = require('./queue');
 const {getCurrentTimers} = require('./timers');
 
@@ -14,6 +14,7 @@ const {
 const {
   getQueue,
   saveSave,
+  backupAndResetSave,
   getSyncToken,
   saveSyncToken,
 } = require('./save');
@@ -40,7 +41,7 @@ const getCalendar = () => {
  * @param {String} pageToken -- optional
  */
 async function getEvents(calendar, syncToken, pageToken) {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const listParams = {
       calendarId: 'primary',
       singleEvents: true,
@@ -49,8 +50,7 @@ async function getEvents(calendar, syncToken, pageToken) {
     if (pageToken) listParams.pageToken = pageToken;
 
     calendar.events.list(listParams, (err, res) => {
-      if (err) return console.log(
-        'The API returned an error while calling events.list: ' + err);
+      if (err) return reject(err);
       resolve(res);
     });
   });
@@ -70,13 +70,14 @@ function storeNewEvents(events) {
     }
     const start = new Date(event.start.dateTime);
     const dayArray = getDayArray(...getYearMonthDay(start));
-    dayArray.push({
+    const timer = {
       id: event.id,
       start: start.toJSON(),
-      end: new Date(event.end.dateTime).toJSON(),
       title: event.summary,
       description: event.description || '',
-    });
+    };
+    if (event.end) timer.end = new Date(event.end.dateTime).toJSON();
+    dayArray.push(timer);
   }
 }
 
@@ -101,15 +102,48 @@ async function syncDown() {
   do {
     const params = [...initialParams];
     if (nextPageToken) params.push(nextPageToken);
-    const res = await getEvents(...params);
-    storeNewEvents(res.data.items);
-    if (res.data.nextSyncToken) saveSyncToken(res.data.nextSyncToken);
-    if (res.data.nextPageToken) {
-      nextPageToken = res.data.nextPageToken;
-      console.log('next', nextPageToken);
-    } else {
-      console.log('no res.data.nextPageToken');
-      break;
+    try {
+      const res = await getEvents(...params);
+      storeNewEvents(res.data.items);
+      if (res.data.nextSyncToken) saveSyncToken(res.data.nextSyncToken);
+      if (res.data.nextPageToken) {
+        nextPageToken = res.data.nextPageToken;
+        console.log('next', nextPageToken);
+      } else {
+        console.log('no res.data.nextPageToken');
+        break;
+      }
+    } catch (e) {
+      console.log(`The API returned an error while calling events.list: ${e}`);
+      if (syncToken && e.code === 410) { // sync token expired
+        const backupFileName = `save_${getDateStr(new Date())}_backup.json`;
+        console.log(`syncDown: Sync token expired. Backing up old save to\
+ ${backupFileName} and creating new one`);
+        backupAndResetSave(backupFileName);
+        console.log('syncDown: Syncing down all events from scratch');
+        // Nullify sync token
+        saveSyncToken(null);
+        // Sync down all events from scratch (no sync token)
+        await syncDown();
+        // Reapply queue to save (add timers that haven’t yet been synced up)
+        // NOTE: Doesn’t account for 'delete' items; only adds/updates. In
+        //  theory sync down should only happen after sync up so the queue
+        //  should not have any 'delete' items.
+        // TODO: Add a check that that is indeed the case
+        console.log('syncDown: Reapplying queue timers');
+        const queue = await getQueue();
+        const events = [];
+        for (const item of queue) {
+          const timer = Object.values(item)[0];
+          const event = {id: timer.id, status: 'confirmed',
+                         start: {dateTime: timer.start},
+                         summary: timer.title};
+          if (timer.end) event.end = {dateTime: timer.end};
+          if (timer.description) event.description = timer.description;
+          events.push(event);
+        }
+        storeNewEvents(events);
+      }
     }
   } while (nextPageToken);
 

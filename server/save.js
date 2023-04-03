@@ -72,6 +72,23 @@ function saveSave() {
 }
 
 /**
+ * Create backup of current save and reset the save
+ * @param {String} backupFileName
+ * @return {Promise} that resolves to save
+ */
+async function backupAndResetSave(backupFileName) {
+  if (fs.existsSync(saveFilePath)) {
+    const saveBackupFilePath = saveFilePath.replace(
+      'save.json', `${backupFileName}`);
+    fs.copyFileSync(saveFilePath, saveBackupFilePath);
+    const props = Object.getOwnPropertyNames(save);
+    for (let i = 0; i < props.length; i++) delete save[props[i]];
+    saveSave();
+    return save;
+  }
+}
+
+/**
  * Save syncToken to file + date of sync (though right now the date is not used
  *  for anything).
  * @param {String} syncToken
@@ -146,6 +163,7 @@ module.exports = {
   getSyncInfo,
   getQueue,
   saveSave,
+  backupAndResetSave,
   saveSyncToken,
   saveQueue,
   getSyncToken,

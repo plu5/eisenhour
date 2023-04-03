@@ -27,4 +27,16 @@ function getYearMonthDay(date) {
           date.getDate()];
 }
 
-module.exports = {tryDeleteObject, getYearMonthDay};
+/**
+ * Get date string in the format yyyy-mm-dd_HH-MM-SS
+ * @param {Date} date
+ * @return {String}
+ */
+function getDateStr(date) {
+  const pad = (num) => num <= 9 ? `0${num}` : num;
+  return `${date.getFullYear()}-${pad(date.getMonth())}-\
+${pad(date.getDate())}_${pad(date.getHours())}-${pad(date.getMinutes())}-\
+${pad(date.getSeconds())}`;
+}
+
+module.exports = {tryDeleteObject, getYearMonthDay, getDateStr};
