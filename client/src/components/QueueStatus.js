@@ -5,6 +5,7 @@ import {subscribe} from '../api/TimerAPI';
 /**
  * QueueStatus
  * @param {Object} props
+ * @param {bool} props.syncing whether a sync is in progress
  * @return {jsx}
  */
 function QueueStatus(props) {
@@ -14,14 +15,14 @@ function QueueStatus(props) {
    * Update status
    */
   async function updateStatus() {
-    setCount(await fetchCount());
+    setCount(props.syncing ? '⌛' : await fetchCount());
   }
 
   subscribe(updateStatus);
 
   useEffect(() => {
     updateStatus();
-  }, []);
+  });
 
   return (
     <div className="queue-status">

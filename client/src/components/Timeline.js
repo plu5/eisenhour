@@ -14,6 +14,7 @@ require('json.date-extensions');
  */
 function Timeline() {
   const [timers, setTimers] = useState([]);
+  const [syncing, setSyncing] = useState(false);
 
   const [date, setDate] = useState(new Date());
 
@@ -100,8 +101,10 @@ function Timeline() {
    * Ask server to sync events
    */
   async function sync_() {
+    setSyncing(true);
     const response = await sync();
     setTimers(await jsonToTimersArray(response));
+    setSyncing(false);
   }
 
   return (
@@ -110,8 +113,8 @@ function Timeline() {
                     onChange={(e) => setDate(e.target.value)}
                     type="day"/>
       <div className="sync">
-        <button onClick={sync_} title="sync">↑↓</button>
-        <QueueStatus/>
+        <button onClick={sync_} title="sync" disabled={syncing}>↑↓</button>
+        <QueueStatus syncing={syncing}/>
       </div>
       <Timebar addTimer={addTimer}/>
       {timers.map((t, i) => (
