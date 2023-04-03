@@ -283,6 +283,12 @@ async function syncUp() {
   return console.log('done syncUp');
 }
 
+router.post('/sync', async (req, res) => {
+  await syncUp();
+  await syncDown();
+  res.send(getCurrentTimers());
+});
+
 router.post('/down', async (req, res) => {
   await syncDown();
   res.send(getCurrentTimers());

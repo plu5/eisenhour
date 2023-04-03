@@ -1,6 +1,6 @@
 import React, {useState, useEffect, useCallback} from 'react';
 
-import {add, down, up} from '../api/TimerAPI';
+import {add, sync} from '../api/TimerAPI';
 import DateSelector from './DateSelector';
 import QueueStatus from './QueueStatus';
 import Timebar from './Timebar';
@@ -97,18 +97,10 @@ function Timeline() {
   }
 
   /**
-   * Ask server to sync down events
+   * Ask server to sync events
    */
-  async function syncDown() {
-    const response = await down();
-    setTimers(await jsonToTimersArray(response));
-  }
-
-  /**
-   * Ask server to sync up events
-   */
-  async function syncUp() {
-    const response = await up();
+  async function sync_() {
+    const response = await sync();
     setTimers(await jsonToTimersArray(response));
   }
 
@@ -118,8 +110,7 @@ function Timeline() {
                     onChange={(e) => setDate(e.target.value)}
                     type="day"/>
       <div className="sync">
-        <button onClick={syncDown} title="sync down">↓</button>
-        <button onClick={syncUp} title="sync up">↑</button>
+        <button onClick={sync_} title="sync">↑↓</button>
         <QueueStatus/>
       </div>
       <Timebar addTimer={addTimer}/>

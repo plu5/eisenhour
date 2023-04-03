@@ -73,6 +73,14 @@ async function dup(data, start) {
 }
 
 /**
+ * Sync
+ * @return {Promise}
+ */
+async function sync() {
+  return base('sync/sync', {});
+}
+
+/**
  * Sync down
  * @return {Promise}
  */
@@ -93,6 +101,7 @@ module.exports = {
   update,
   del,
   dup,
+  sync,
   down,
   up,
   subscribe,
