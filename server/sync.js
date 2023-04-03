@@ -283,9 +283,33 @@ async function syncUp() {
   return console.log('done syncUp');
 }
 
-router.post('/sync', async (req, res) => {
-  await syncUp();
+/**
+ * Sync up and down
+ */
+async function sync() {
+  // TODO: Have some sort of limit/error to prevent infinite loop if something
+  //  went wrong
+  let yetToSyncUp = 0;
+  do {
+    if (yetToSyncUp) {
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // sleep
+      yetToSyncUp = 0;
+    }
+    await syncUp();
+    const queue = await getQueue();
+    if (queue.length) {
+      for (const item of queue) {
+        const timer = Object.values(item)[0];
+        if (timer.end != null) yetToSyncUp++;
+      }
+    }
+  } while (yetToSyncUp);
+
   await syncDown();
+}
+
+router.post('/sync', async (req, res) => {
+  await sync();
   res.send(getCurrentTimers());
 });
 
