@@ -37,7 +37,7 @@ function TodoItem(props) {
         <label>
           <input className="todo-checkbox" type="checkbox"
                  checked={props.data.done} onChange={handleCheckedChange}/>
-          {props.data.title}
+          <span className="todo-title">{props.data.title}</span>
         </label>
         {isDeleting ?
          <div>

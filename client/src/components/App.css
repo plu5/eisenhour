@@ -319,6 +319,10 @@ input.todo-checkbox {
   width: 100%;
 }
 
+.todo-item:hover .todo-title {
+  background: yellow;
+}
+
 .todo-del-btn {
   display: none;
   padding: 0px;
