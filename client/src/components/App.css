@@ -9,14 +9,16 @@
   --timer-min-height: 3.1rem;
   --time-section-min-width: 110px;
   --middle-container-max-width: 40rem; /* unused atm */
+  --todos-section-width: 13em;
 
   --color-back: #CDCDC1;
   --color-back-alt: #C6C6B9;
   --color-active: green;
   --color-alt: #6a6a6a;
 }
-@media screen and (max-width: 42em) {
+@media screen and (max-width: 48.7em) {
   :root {
+    --todos-section-width: fit-content;
   }
 }
 
@@ -259,8 +261,11 @@ input, button {
  * Todos
  */
 
-.todos {
-  padding-left: 20px;
+.todos ul {
+  margin-left: auto;
+  margin-right: auto;
+  width: var(--todos-section-width);
+  padding: 0;
 }
 
 li.todo-li {
@@ -286,7 +291,6 @@ input.todo-checkbox {
   position: relative;
   z-index: 2;
   list-style: none;
-  width: 200px;
 }
 
 .todo-li.done label {
