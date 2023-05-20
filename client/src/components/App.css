@@ -279,12 +279,12 @@ li.todo-li {
 }
 
 li.todo-li:first-child {
-  border-radius: 5px 5px 0 0;
+  border-radius: 0 5px 0 0;
 }
 
 li.todo-li:last-of-type {
   border-bottom: none;
-  border-radius: 0 0 5px 5px;
+  border-radius: 0 0 5px 0;
 }
 
 .add-todo {
