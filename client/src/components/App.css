@@ -275,6 +275,7 @@ li.todo-li {
   border-left: 1px solid #f48981;
   border-bottom: 1px solid #afd8f4;
   padding-left: 2px;
+  color: #4343b5;
 }
 
 li.todo-li:first-child {
