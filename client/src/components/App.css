@@ -272,11 +272,18 @@ li.todo-li {
   font-size: 0.95em;
   background: #fff;
   border: none;
-  border-bottom: 1px solid #ddd;
+  border-left: 1px solid #f48981;
+  border-bottom: 1px solid #afd8f4;
+  padding-left: 2px;
 }
 
-li.todo-li:last-child {
+li.todo-li:first-child {
+  border-radius: 5px 5px 0 0;
+}
+
+li.todo-li:last-of-type {
   border-bottom: none;
+  border-radius: 0 0 5px 5px;
 }
 
 .add-todo {
