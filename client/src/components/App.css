@@ -293,6 +293,10 @@ input.todo-checkbox {
   list-style: none;
 }
 
+.todo-li label {
+  display: block;
+}
+
 .todo-li.done label {
   text-decoration: line-through;
 }
@@ -302,13 +306,21 @@ input.todo-checkbox {
   z-index: 2;
 }
 
+.todo-item {
+  position: relative;
+  width: 100%;
+}
+
 .todo-del-btn {
   display: none;
   padding: 0px;
   width: 20px;
+  height: 100%;
+  position: absolute;
+  right: 0;
+  top: 0;
 }
 
 .todo-li:hover .todo-del-btn {
   display: inline;
-  float: right;
 } 
