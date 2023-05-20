@@ -254,3 +254,57 @@ input, button {
 .task-group {
   display: block;
 }
+
+/*
+ * Todos
+ */
+
+.todos {
+  padding-left: 20px;
+}
+
+li.todo-li {
+  font-size: 0.95em;
+  background: #fff;
+  border: none;
+  border-bottom: 1px solid #ddd;
+}
+
+li.todo-li:last-child {
+  border-bottom: none;
+}
+
+.add-todo {
+  height: 15px;
+}
+
+input.todo-checkbox {
+  -webkit-appearance: auto;
+}
+
+.todo-li {
+  position: relative;
+  z-index: 2;
+  list-style: none;
+  width: 200px;
+}
+
+.todo-li.done label {
+  text-decoration: line-through;
+}
+
+.add-todo {
+  position: relative;
+  z-index: 2;
+}
+
+.todo-del-btn {
+  display: none;
+  padding: 0px;
+  width: 20px;
+}
+
+.todo-li:hover .todo-del-btn {
+  display: inline;
+  float: right;
+} 

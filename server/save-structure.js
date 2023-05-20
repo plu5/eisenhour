@@ -16,13 +16,13 @@ let save = null;
  * @param {Integer} day
  * @return {Array} keys for year, month, day
  */
-function getSaveKeysAndVerifyStructureFor(year, month, day) {
+function getSaveKeysAndVerifyStructureFor(year, month, day, save_=save) {
   const y = 'y' + year;
   const m = 'm' + month;
   const d = 'd' + day;
-  if (!save[y]) save[y] = {};
-  if (!save[y][m]) save[y][m] = {};
-  if (!save[y][m][d]) save[y][m][d] = [];
+  if (!save_[y]) save_[y] = {};
+  if (!save_[y][m]) save_[y][m] = {};
+  if (!save_[y][m][d]) save_[y][m][d] = [];
   return [y, m, d];
 }
 
@@ -33,9 +33,9 @@ function getSaveKeysAndVerifyStructureFor(year, month, day) {
  * @param {Integer} day
  * @return {Array} array of timers for given save day
  */
-function getDayArray(year, month, day) {
-  const [y, m, d] = getSaveKeysAndVerifyStructureFor(year, month, day);
-  return save[y][m][d];
+function getDayArray(year, month, day, save_=save) {
+  const [y, m, d] = getSaveKeysAndVerifyStructureFor(year, month, day, save_);
+  return save_[y][m][d];
 }
 
 /**
@@ -43,8 +43,8 @@ function getDayArray(year, month, day) {
  * @param {String} id
  * @return {Array} dayArray if found, {Bool} false if not found.
  */
-function getDayArrayById(id) {
-  for (const [, year] of Object.entries(save)) {
+function getDayArrayById(id, save_=save) {
+  for (const [, year] of Object.entries(save_)) {
     for (const [, month] of Object.entries(year)) {
       for (const [, dayArray] of Object.entries(month)) {
         const index = dayArray.findIndex((t) => t.id === id);

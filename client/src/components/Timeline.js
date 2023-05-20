@@ -10,13 +10,14 @@ require('json.date-extensions');
 
 /**
  * Timeline
+ * @param {Object} props
+ * @param {Date} props.date
+ * @param {Function} props.setDate
  * @return {jsx}
  */
-function Timeline() {
+function Timeline(props) {
   const [timers, setTimers] = useState([]);
   const [syncing, setSyncing] = useState(false);
-
-  const [date, setDate] = useState(new Date());
 
   /**
    * Get a string in the format yyyy-m-d from a Date object.
@@ -29,7 +30,7 @@ function Timeline() {
   }
 
   const _update = useCallback(async () =>
-    setTimers(await fetchTimers(getDateStr(date))), [date]);
+    setTimers(await fetchTimers(getDateStr(props.date))), [props.date]);
 
   /**
    * Update timers data
@@ -37,39 +38,14 @@ function Timeline() {
    *  date before updating the list of timers.
    */
   async function update(newDate) {
-    newDate ? setDate(newDate) : _update();
+    newDate ? props.setDate(newDate) : _update();
   }
 
   // Update timers data on load and on date change
   useEffect(() => {
     console.log('Timeline: update timers data useEffect');
     _update();
-  }, [date, _update]);
-
-  // Update date at midnight
-  useEffect(() => {
-    let timeoutId;
-
-    /**
-     * Set timeout to midnight
-     * @return {Object} timeout
-     */
-    function setTimeoutToMidnight() {
-      const midnight = new Date();
-      midnight.setHours(24, 0, 0, 0);
-      const now = new Date();
-      const msUntilMidnight = midnight.getTime() - now.getTime();
-      return setTimeout(function() {
-        setDate(new Date());
-        timeoutId = setTimeoutToMidnight();
-      }, msUntilMidnight);
-    }
-
-    timeoutId = setTimeoutToMidnight();
-    return () => {
-      clearInterval(timeoutId);
-    };
-  }, []);
+  }, [props.date, _update]);
 
   /**
    * Update page title based on number of running timers
@@ -92,7 +68,7 @@ function Timeline() {
    */
   async function addTimer(title) {
     const start = new Date();
-    setDate(start);
+    props.setDate(start);
     const response = await add(title, start);
     setTimers(await jsonToTimersArray(response));
   }
@@ -109,8 +85,8 @@ function Timeline() {
 
   return (
     <div className="timeline">
-      <DateSelector date={date}
-                    onChange={(e) => setDate(e.target.value)}
+      <DateSelector date={props.date}
+                    onChange={(e) => props.setDate(e.target.value)}
                     type="day"/>
       <div className="sync">
         <button onClick={sync_} title="sync" disabled={syncing}>↑↓</button>
