@@ -72,20 +72,25 @@ function Todos(props) {
 
   return (
     <div className="todos">
+      <span className="todos-info"
+            title={items.filter((item) => item.done === true).length + '/' +
+                   items.length + ' done'}>
+        {items.length === 0 ? 'No' : items.length} items in day’s todo list
+      </span>
       <ul>
         {items.map((item) => (
           <TodoItem key={item.id} data={item}
                     onCheckedChange={handleTodoItemCheckedChange}
                     onSelfDestruct={deleteItem}/>
         ))}
-        <textarea className="add-todo"
-                  placeholder="Add an item"
-                  data-autosize="true"
-                  value={inputValue}
-                  onChange={handleInputChange}
-                  onKeyUp={handleInputKeyUp}>
-        </textarea>
       </ul>
+      <textarea className="add-todo"
+                placeholder="Add an item"
+                data-autosize="true"
+                value={inputValue}
+                onChange={handleInputChange}
+                onKeyUp={handleInputKeyUp}>
+      </textarea>
     </div>
   );
 }

@@ -261,11 +261,15 @@ input, button {
  * Todos
  */
 
-.todos ul {
+.todos {
   margin-left: auto;
   margin-right: auto;
   width: var(--todos-section-width);
+}
+
+.todos ul {
   padding: 0;
+  margin: 0;
 }
 
 li.todo-li {
