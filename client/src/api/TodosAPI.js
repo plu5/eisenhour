@@ -51,9 +51,20 @@ async function del(id) {
   return base('todos/delete', {id});
 }
 
+/**
+ * Swap two todo items
+ * @param {String} id1
+ * @param {String} id2
+ * @return {Promise}
+ */
+async function swap(id1, id2) {
+  return base('todos/swap', {id1, id2});
+}
+
 module.exports = {
   getTodoList,
   add,
   update,
   del,
+  swap,
 };

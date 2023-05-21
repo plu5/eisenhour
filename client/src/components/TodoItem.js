@@ -10,6 +10,10 @@ import React, {useState} from 'react';
  *   checked/unchecked. Passes item data and checked status.
  * @param {Function} props.onSelfDestruct called when the todo item wants to be
  *   deleted. Passes item data.
+ * @param {Function} props.onDragStart
+ * @param {Function} props.onDragEnter
+ * @param {Function} props.onDragOver
+ * @param {Function} props.onDrop
  * @return {jsx}
  */
 function TodoItem(props) {
@@ -33,7 +37,9 @@ function TodoItem(props) {
   return (
     <li key={props.data.id}
         className={props.data.done ? 'todo-li done': 'todo-li'}>
-      <div className="todo-item">
+      <div className="todo-item"
+           onDragStart={props.onDragStart} onDragEnter={props.onDragEnter}
+           onDragOver={props.onDragOver} onDrop={props.onDrop} draggable>
         <label>
           <input className="todo-checkbox" type="checkbox"
                  checked={props.data.done} onChange={handleCheckedChange}/>

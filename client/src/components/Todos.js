@@ -1,6 +1,6 @@
-import React, {useState, useCallback, useEffect} from 'react';
+import React, {useState, useCallback, useEffect, useRef} from 'react';
 
-import {getTodoList, add, update, del} from '../api/TodosAPI';
+import {getTodoList, add, update, del, swap} from '../api/TodosAPI';
 import TodoItem from './TodoItem';
 
 
@@ -70,6 +70,33 @@ function Todos(props) {
     setItems(res);
   }
 
+  const dragItemId = useRef(null);
+  const dragOverItemId = useRef(null);
+
+  const indexFromId = (id) => items.findIndex((item) => item.id === id);
+
+  /**
+   * Swap positions of two items
+   * @param {String} id1 : id of item 1
+   * @param {String} id2 : id of item 2
+   */
+  function swapItems(id1, id2) {
+    setItems((items) => {
+      const items_ = [...items];
+      items_.splice(indexFromId(id2), 0,
+                    items_.splice(indexFromId(id1), 1)[0]);
+      return items_;
+    });
+  }
+
+  /**
+   * Todo item onDrop event handler
+   */
+  function handleItemDrop() {
+    swapItems(dragItemId.current, dragOverItemId.current);
+    swap(dragItemId.current, dragOverItemId.current);
+  }
+
   return (
     <div className="todos">
       <span className="todos-info"
@@ -81,7 +108,13 @@ function Todos(props) {
         {items.map((item) => (
           <TodoItem key={item.id} data={item}
                     onCheckedChange={handleTodoItemCheckedChange}
-                    onSelfDestruct={deleteItem}/>
+                    onSelfDestruct={deleteItem}
+                    onDragStart={(e) => dragItemId.current = item.id}
+                    onDragEnter={(e) => dragOverItemId.current = item.id}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                    }}
+                    onDrop={handleItemDrop}/>
         ))}
       </ul>
       <textarea className="add-todo"

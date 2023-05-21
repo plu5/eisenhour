@@ -44,6 +44,18 @@ function updateCurrentTodos(year, month, day) {
   return currentTodos;
 }
 
+const indexFromId = (id) => currentTodos.findIndex((item) => item.id === id);
+
+/**
+ * Swap positions of two items
+ * @param {String} id1 : id of item 1
+ * @param {String} id2 : id of item 2
+ */
+function swapItems(id1, id2) {
+  currentTodos.splice(indexFromId(id2), 0,
+                      currentTodos.splice(indexFromId(id1), 1)[0]);
+}
+
 
 router.post('/', (req, res) => {
   const p = req.body;
@@ -68,6 +80,13 @@ router.post('/update', (req, res) => {
 router.post('/delete', (req, res) => {
   const p = req.body;
   tryDeleteObject(p.id, currentTodos);
+  res.send(currentTodos);
+  saveTodos();
+});
+
+router.post('/swap', (req, res) => {
+  const p = req.body;
+  swapItems(p.id1, p.id2);
   res.send(currentTodos);
   saveTodos();
 });

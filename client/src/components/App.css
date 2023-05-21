@@ -297,6 +297,7 @@ li.todo-li:last-of-type {
 
 input.todo-checkbox {
   -webkit-appearance: auto;
+  cursor: pointer;
 }
 
 .todo-li {
@@ -307,6 +308,7 @@ input.todo-checkbox {
 
 .todo-li label {
   display: block;
+  cursor: pointer;
 }
 
 .todo-li.done label {
