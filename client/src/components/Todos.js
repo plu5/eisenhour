@@ -23,11 +23,12 @@ function Todos(props) {
   }, [props.date, _update]);
 
   /**
-   * Add new todo list item
-   * @param {String} title
+   * Add new todo list items
+   * @param {Array} titles: array of strings
    */
-  async function addTodo(title) {
-    const res = await add(title);
+  async function addTodos(titles) {
+    let res;
+    for (const title of titles) res = await add(title);
     setItems(res);
   }
 
@@ -46,7 +47,9 @@ function Todos(props) {
   function handleInputKeyUp(e) {
     if (e.keyCode === 13 && inputValue) {
       const lines = inputValue.split('\n');
-      for (const line of lines) if (line) addTodo(line);
+      const toAdd = [];
+      for (const line of lines) if (line) toAdd.push(line);
+      addTodos(toAdd);
       setInputValue('');
     }
   }
