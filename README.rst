@@ -125,7 +125,7 @@ You can categorise timers by creating task groups.
 
 Each task group should have a name and at least one regex matcher. It can be given a colour, which can be any CSS colour or hex, and will be used to colour the backgrounds of all matching timers.
 
-In the Statistics (6) section, you can tally the amount and total duration of timers matching each task group for a given year.
+In the Statistics (6) section, you can tally the amount and total duration of timers matching each task group for a given year, month, day, or specified date range.
 
 ----------
 Influences & acknowledgements
