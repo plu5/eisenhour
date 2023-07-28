@@ -2,8 +2,12 @@ const {syncUp, syncDown} = require('./sync');
 const authentication = require('./authentication');
 const save = require('./save');
 const queue = require('./queue'); // eslint-disable-line no-unused-vars
-const {tryDeleteTimerFromSave, getDayArray} = require('./save-structure');
 const {getYearMonthDay} = require('./utils');
+const {
+  tryDeleteTimerFromSave,
+  tryUpdateTimerId,
+  getDayArray,
+} = require('./save-structure');
 
 
 jest.mock('./authentication');
@@ -82,6 +86,9 @@ jest.mock('./save-structure', () => {
     tryDeleteTimerFromSave: jest.fn((id) => {
       originalModule.tryDeleteTimerFromSave(id, {});
     }),
+    tryUpdateTimerId: jest.fn((timer, newId) => {
+      originalModule.tryUpdateTimerId(timer, newId, {});
+    }),
     getDayArray: jest.fn(() => []),
   };
 });
@@ -94,6 +101,9 @@ const _mockSave = (save_) => {
   tryDeleteTimerFromSave.mockImplementation((id) =>
     originalModule.tryDeleteTimerFromSave(id, save_));
 
+  tryUpdateTimerId.mockImplementation((timer, newId) =>
+    originalModule.tryUpdateTimerId(timer, newId, save_));
+
   getDayArray.mockImplementation((y, m, d, s) =>
     originalModule.getDayArray(y, m, d, save_));
 };
@@ -102,6 +112,7 @@ const _mockSave = (save_) => {
  * Mock save. Mocks:
  * - Return value of save.getSave to use a dummy save
  * - tryDeleteTimerFromSave to use the dummy save
+ * - tryUpdateTimerId to use the dummy save
  * - getDayArray to use the dummy save
  * @param {Object} ...generateDummySaveArgs - Arguments generateDummySave takes
  * @return {Object} dummy save
@@ -172,6 +183,14 @@ describe('syncUp', () => {
     mockQueue(1, {0: {update: true}});
     await syncUp();
     expectEvents(1, 0, 0, 1);
+  });
+  it('updates timer ids correctly when syncing 10 new timers', async () => {
+    const save_ = mockSave(10);
+    const saveStr = JSON.stringify(save_);
+    mockQueue(10);
+    await syncUp();
+    expect(save_).toEqual(JSON.parse(
+      saveStr.replaceAll(dummyUpQueueItemFields.id, 'mock-id')));
   });
   it('handles promise rejection in case of server error', async () => {
     calendar.events.insert.mockImplementation(async (...args) => {

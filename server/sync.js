@@ -9,6 +9,7 @@ const {getCurrentTimers} = require('./timers');
 const {
   getDayArray,
   tryDeleteTimerFromSave,
+  tryUpdateTimerId,
 } = require('./save-structure');
 
 const {
@@ -249,7 +250,7 @@ async function syncUp() {
         console.log(`sync up new: ${timer.id} - ${timer.title}`);
         schedule(insertEvent, calendar, timer)
           .then((v) => {
-            timer.id = v;
+            tryUpdateTimerId(timer, v);
             resolve(index);
           })
           .catch((e) => {
