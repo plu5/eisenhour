@@ -162,8 +162,16 @@ async function handleSyncTokenExpired() {
  * @param {Object} timer
  */
 async function deleteEvent(calendar, timer) {
-  await calendar.events.delete({calendarId: 'primary', eventId: timer.id});
-  return console.log(`deleteEvent ${timer.id}`);
+  try {
+    await calendar.events.delete({calendarId: 'primary', eventId: timer.id});
+    console.log(`deleteEvent ${timer.id}`);
+    return true;
+  } catch (e) {
+    console.log(`The API returned an error while calling events.delete: ${e}`);
+    // 410 error means the event was already deleted on server
+    if (e.code === 410) return true;
+    return false;
+  }
 }
 
 /**
@@ -180,9 +188,27 @@ async function insertEvent(calendar, timer) {
     start: {dateTime: timer.start},
     end: {dateTime: timer.end},
   };
-  const res = await calendar.events.insert({calendarId: 'primary',
-                                            resource: event});
-  return res.data.id;
+  try {
+    const res = await calendar.events.insert({calendarId: 'primary',
+                                              resource: event});
+    return res.data.id;
+  } catch (e) {
+    console.log(`The API returned an error while calling events.insert: ${e}`);
+  }
+}
+
+/**
+ * Get event
+ * @param {Object} calendar
+ * @param {String} eventId
+ */
+async function getEvent(calendar, eventId) {
+  try {
+    const res = await calendar.events.get({calendarId: 'primary', eventId});
+    return res.data;
+  } catch (e) {
+    console.log(`The API returned an error while calling events.get: ${e}`);
+  }
 }
 
 /**
@@ -192,16 +218,20 @@ async function insertEvent(calendar, timer) {
  */
 async function updateEvent(calendar, timer) {
   // Get and update existing event
-  const res = await calendar.events.get({calendarId: 'primary',
-                                         eventId: timer.id});
-  const event = res.data;
+  const event = getEvent(calendar, timer.id);
   event.summary = timer.title || event.summary;
   event.description = timer.description || event.description;
   event.start = {dateTime: timer.start};
   event.end = {dateTime: timer.end};
-  await calendar.events.update({calendarId: 'primary',
-                                eventId: timer.id, resource: event});
-  return console.log(`updateEvent ${res.data.id}`);
+  try {
+    await calendar.events.update({calendarId: 'primary',
+                                  eventId: timer.id, resource: event});
+    console.log(`updateEvent ${timer.id}`);
+    return true;
+  } catch (e) {
+    console.log(`The API returned an error while calling events.update: ${e}`);
+    return false;
+  }
 }
 
 /**
@@ -233,40 +263,27 @@ async function syncUp() {
       if (change === 'delete') {
         console.log(`sync up delete: ${timer.id} - ${timer.title}`);
         schedule(deleteEvent, calendar, timer)
-          .then((v) => resolve(index))
-          .catch((e) => {
-            console.log(`The API returned an error\
- while calling events.delete: ${e}`);
-            if (e.code !== 410) {
-              reject(e);
-            } else {
-              // 410 error means the event was already deleted on server, so we
-              //  need to remove it from queue so do not return in that case.
-              resolve(index);
-            }
+          .then((v) => {
+            if (v) resolve(index);
+            else reject(new Error('deleteEvent failed'));
           });
       } else if (change === 'new') {
         if (maybeSkipRunningTimer(timer, reject)) return;
         console.log(`sync up new: ${timer.id} - ${timer.title}`);
         schedule(insertEvent, calendar, timer)
           .then((v) => {
-            tryUpdateTimerId(timer, v);
-            resolve(index);
-          })
-          .catch((e) => {
-            console.log(
-              `The API returned an error while calling events.insert: ${e}`);
-            reject(e);
+            if (v) {
+              tryUpdateTimerId(timer, v);
+              resolve(index);
+            } else reject(new Error('insertEvent failed'));
           });
       } else if (change === 'update') {
         if (maybeSkipRunningTimer(timer, reject)) return;
         console.log(`sync up update: ${timer.id} - ${timer.title}`);
         schedule(updateEvent, calendar, timer)
-          .then((v) => resolve(index))
-          .catch((e) => {
-            console.log(`The API returned an error\
- while calling events.get or events.update: ${e}`);
-            reject(e);
+          .then((v) => {
+            if (v) resolve(index);
+            else reject(new Error('updateEvent failed'));
           });
       }
     });
