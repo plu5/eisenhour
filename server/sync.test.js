@@ -114,7 +114,7 @@ function mockSave(...generateDummySaveArgs) {
 
 const calendar = {
   events: {get: jest.fn(), insert: jest.fn(), delete: jest.fn(),
-           update: jest.fn()}
+           update: jest.fn(), list: jest.fn()}
 };
 
 /**
@@ -131,9 +131,7 @@ function mockCalendarList(err, queueItems) {
                 start: {dateTime: item.start},
                 end: {dateTime: item.end}});
   }
-  calendar.events.list = (listParams, callback) => {
-    callback(err, {data: {items}});
-  };
+  calendar.events.list.mockResolvedValue({data: {items}});
 }
 
 const expectEvents = (get, insert, delete_, update) => {
