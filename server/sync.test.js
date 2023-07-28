@@ -1,7 +1,10 @@
-const {syncUp} = require('./sync');
+const {syncUp, syncDown} = require('./sync');
 const authentication = require('./authentication');
 const save = require('./save');
 const queue = require('./queue'); // eslint-disable-line no-unused-vars
+const {tryDeleteTimerFromSave, getDayArray} = require('./save-structure');
+const {getYearMonthDay} = require('./utils');
+
 
 jest.mock('./authentication');
 jest.mock('./save');
@@ -13,7 +16,15 @@ const dummyUpQueueItemFields = {
     'title': 'dev: eisenhour', 'description': ''
 };
 
-const generateDummyUpQueue = (length=1, modifications={}) => {
+/**
+ * Generate dummy up queue
+ * @param {int} length - Number of items in the up queue
+ * @param {Object=} modifications - Optional modifications object. The format
+ *   is a dictionary where each key is an integer representing the index of the
+ *   item to modify
+ * @return {Object} dummy up queue
+ */
+function generateDummyUpQueue(length=1, modifications={}) {
   const dummyUpQueue = [];
   for (let i = 0; i < length; i++) {
     let item = {'new': {...dummyUpQueueItemFields}};
@@ -27,17 +38,103 @@ const generateDummyUpQueue = (length=1, modifications={}) => {
     dummyUpQueue.push(item);
   }
   return dummyUpQueue;
-};
+}
 
-const mockQueue = (...generateDummyUpQueueArgs) => {
+/**
+ * Mock save.getQueue
+ * @param {Object} ...generateDummyUpQueueArgs - Arguments generateDummyUpQueue
+ *   takes
+ */
+function mockQueue(...generateDummyUpQueueArgs) {
   const queue = generateDummyUpQueue(...generateDummyUpQueueArgs);
   save.getQueue.mockReturnValue(queue);
+}
+
+/**
+ * Generate dummy save
+ * @param {int} length - Number of items in the save
+ * @param {Object=} modifications - Optional modifications object. The format
+ *   is a dictionary where each key is an integer representing the index of the
+ *   item to modify, and each value is a dictionary with timer data items to
+ *   modify. e.g. `{0: {title: 'new title', description: 'new description'}}`
+ * @return {Object} dummy save
+ */
+function generateDummySave(length=1, modifications={}) {
+  const dummySave = {};
+  _mockSave(dummySave);
+  for (let i = 0; i < length; i++) {
+    const item = {...dummyUpQueueItemFields};
+    if (modifications[i]) {
+      for (const d of ['id', 'start', 'end', 'title', 'description'])
+        if (modifications[i][d]) item[d] = modifications[i][d];
+    }
+    getDayArray(...getYearMonthDay(new Date(item.start)), dummySave)
+      .push(item);
+  }
+  return dummySave;
+}
+
+// Doesn’t work when I put this in a function
+jest.mock('./save-structure', () => {
+  const originalModule = jest.requireActual('./save-structure');
+  return {
+    ...originalModule,
+    tryDeleteTimerFromSave: jest.fn((id) => {
+      originalModule.tryDeleteTimerFromSave(id, {});
+    }),
+    getDayArray: jest.fn(() => []),
+  };
+});
+
+const _mockSave = (save_) => {
+  save.getSave.mockReturnValue(save_);
+
+  const originalModule = jest.requireActual('./save-structure');
+
+  tryDeleteTimerFromSave.mockImplementation((id) =>
+    originalModule.tryDeleteTimerFromSave(id, save_));
+
+  getDayArray.mockImplementation((y, m, d, s) =>
+    originalModule.getDayArray(y, m, d, save_));
 };
+
+/**
+ * Mock save. Mocks:
+ * - Return value of save.getSave to use a dummy save
+ * - tryDeleteTimerFromSave to use the dummy save
+ * - getDayArray to use the dummy save
+ * @param {Object} ...generateDummySaveArgs - Arguments generateDummySave takes
+ * @return {Object} dummy save
+ */
+function mockSave(...generateDummySaveArgs) {
+  const save_ = generateDummySave(...generateDummySaveArgs);
+  _mockSave(save_);
+  return save_;
+}
 
 const calendar = {
   events: {get: jest.fn(), insert: jest.fn(), delete: jest.fn(),
            update: jest.fn()}
 };
+
+/**
+ * Mock calendar.events.list
+ * @param {Bool} err : Whether it should error
+ * @param {Array} queueItems : List of items in eisenhour format. start and
+ *   end time should be strings not dates. These items will be converted
+ *   to gcal format and returned when calendar.events.list is called.
+ */
+function mockCalendarList(err, queueItems) {
+  const items = [];
+  for (const item of queueItems) {
+    items.push({id: item.id, summary: item.title,
+                start: {dateTime: item.start},
+                end: {dateTime: item.end}});
+  }
+  calendar.events.list = (listParams, callback) => {
+    callback(err, {data: {items}});
+  };
+}
 
 const expectEvents = (get, insert, delete_, update) => {
   expect(calendar.events.get).toHaveBeenCalledTimes(get);
@@ -49,6 +146,7 @@ const expectEvents = (get, insert, delete_, update) => {
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 
+/* ----- syncUp tests ----- */
 describe('syncUp', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -111,5 +209,31 @@ describe('syncUp', () => {
     await syncUp();
     expectEvents(0, 15, 0, 0);
     expect(queue.removeFromQueue).toHaveBeenCalledTimes(15);
+  });
+});
+
+
+/* ----- syncDown tests ----- */
+describe('syncDown', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+    authentication.getCalendar.mockReturnValue(calendar);
+  });
+  it('syncs down 1 event into an empty save', async () => {
+    const save_ = mockSave(0);
+    const item = {...dummyUpQueueItemFields,
+                  start: '2022-12-06T20:18:06.849Z'};
+    mockCalendarList(false, [item]);
+    await syncDown();
+    expect(save_).toEqual({y2022: {m12: {d6: [item]}}});
+  });
+  it('updates existing timer whose event changed upstream', async () => {
+    const start = '2022-12-06T20:18:06.849Z';
+    const save_ = mockSave(1, {0: {start}});
+    const item = {...dummyUpQueueItemFields, start};
+    const updatedItem = {...item, end: '2022-12-06T20:19:06.849Z'};
+    mockCalendarList(false, [updatedItem]);
+    await syncDown();
+    expect(save_).toEqual({y2022: {m12: {d6: [updatedItem]}}});
   });
 });

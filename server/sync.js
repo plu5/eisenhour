@@ -62,7 +62,6 @@ async function getEvents(calendar, syncToken, pageToken) {
  */
 function storeNewEvents(events) {
   for (const event of events) {
-    // I know.
     tryDeleteTimerFromSave(event.id);
     if (event.status === 'cancelled') {
       console.log('storeNewEvents: event.status cancelled');
@@ -102,6 +101,7 @@ async function syncDown() {
   do {
     const params = [...initialParams];
     if (nextPageToken) params.push(nextPageToken);
+    // TODO: Move the try to getEvents
     try {
       const res = await getEvents(...params);
       storeNewEvents(res.data.items);
@@ -329,4 +329,4 @@ router.get('/countQueue', async (req, res) => {
 });
 
 
-module.exports = {router, syncUp};
+module.exports = {router, syncUp, syncDown};

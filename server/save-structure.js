@@ -14,6 +14,7 @@ let save = null;
  * @param {Integer} year
  * @param {Integer} month
  * @param {Integer} day
+ * @param {Object} save_
  * @return {Array} keys for year, month, day
  */
 function getSaveKeysAndVerifyStructureFor(year, month, day, save_=save) {
@@ -31,6 +32,7 @@ function getSaveKeysAndVerifyStructureFor(year, month, day, save_=save) {
  * @param {Integer} year
  * @param {Integer} month
  * @param {Integer} day
+ * @param {Object} save_
  * @return {Array} array of timers for given save day
  */
 function getDayArray(year, month, day, save_=save) {
@@ -41,6 +43,7 @@ function getDayArray(year, month, day, save_=save) {
 /**
  * Return day array of timer with given id, or false if not found.
  * @param {String} id
+ * @param {Object} save_
  * @return {Array} dayArray if found, {Bool} false if not found.
  */
 function getDayArrayById(id, save_=save) {
@@ -73,10 +76,11 @@ function sortArrayByStart(array) {
 /**
  * Attempt to delete timer with given id from the entire save.
  * @param {String} id
+ * @param {Object} save_
  * @return {Bool} true if object was deleted, false if not found.
  */
-function tryDeleteTimerFromSave(id) {
-  const dayArray = getDayArrayById(id);
+function tryDeleteTimerFromSave(id, save_=save) {
+  const dayArray = getDayArrayById(id, save_);
   if (dayArray) if (tryDeleteObject(id, dayArray)) return true;
   return false;
 }
